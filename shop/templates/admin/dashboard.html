@@ -1,0 +1,184 @@
+{% extends "admin/admin_base.html" %}
+
+{% block title %}Dashboard Analytics{% endblock %}
+{% block page_title %}Vue d'ensemble{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-2">
+    <!-- KPIs -->
+    <div class="row g-4 mb-4">
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6 class="text-muted fw-bold mb-0">Total Ventes</h6>
+                        <div class="bg-success bg-opacity-10 text-success rounded-circle d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
+                            <i class="fas fa-coins fs-5"></i>
+                        </div>
+                    </div>
+                    <h3 class="fw-bold mb-1" style="color: var(--dark-color);">{{ total_sales|floatformat:0 }} <span style="font-size: 1rem; color: #6c757d;">FCFA</span></h3>
+                    <p class="text-success small mb-0"><i class="fas fa-arrow-up me-1"></i>Vue d'ensemble</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6 class="text-muted fw-bold mb-0">Produits Actifs</h6>
+                        <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
+                            <i class="fas fa-box-open fs-5"></i>
+                        </div>
+                    </div>
+                    <h3 class="fw-bold mb-1" style="color: var(--dark-color);">{{ product_count }}</h3>
+                    <p class="text-muted small mb-0">En catalogue</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6 class="text-muted fw-bold mb-0">Catégories</h6>
+                        <div class="bg-warning bg-opacity-10 text-warning rounded-circle d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
+                            <i class="fas fa-tags fs-5"></i>
+                        </div>
+                    </div>
+                    <h3 class="fw-bold mb-1" style="color: var(--dark-color);">{{ category_count }}</h3>
+                    <p class="text-muted small mb-0">Départements</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6 class="text-muted fw-bold mb-0">Utilisateurs</h6>
+                        <div class="bg-info bg-opacity-10 text-info rounded-circle d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
+                            <i class="fas fa-users fs-5"></i>
+                        </div>
+                    </div>
+                    <h3 class="fw-bold mb-1" style="color: var(--dark-color);">{{ user_count }}</h3>
+                    <p class="text-muted small mb-0">Comptes enregistrés</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts and Table -->
+    <div class="row g-4">
+        <!-- Main Chart -->
+        <div class="col-xl-8">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-header bg-white border-0 pt-4 pb-2 px-4 d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold mb-0" style="color: var(--dark-color);">Évolution des Ventes</h5>
+                    <button class="btn btn-sm btn-outline-secondary rounded-pill"><i class="fas fa-download me-1"></i> Rapport</button>
+                </div>
+                <div class="card-body px-4 pb-4" style="position: relative; height: 350px; width: 100%;">
+                    <canvas id="salesChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Orders -->
+        <div class="col-xl-4">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-header bg-white border-0 pt-4 pb-2 px-4">
+                    <h5 class="fw-bold mb-0" style="color: var(--dark-color);">Commandes Récentes</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush border-top-0">
+                        {% for order in recent_orders %}
+                        <div class="list-group-item px-4 py-3 d-flex align-items-center border-0 border-bottom">
+                            <div class="bg-light rounded d-flex align-items-center justify-content-center me-3" style="width: 45px; height: 45px;">
+                                <i class="fas fa-shopping-bag text-primary"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <h6 class="mb-0 fw-bold">Commande #{{ order.id|stringformat:"04d" }}</h6>
+                                <small class="text-muted">{{ order.user.firstname }} {{ order.user.lastname }}</small>
+                            </div>
+                            <div class="text-end">
+                                <span class="fw-bold d-block" style="color: var(--accent-color);">{{ order.total|floatformat:0 }} FCFA</span>
+                                <small class="text-muted">{{ order.created_at|date:"d M" }}</small>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="list-group-item px-4 py-4 text-center text-muted border-0">
+                            Aucune commande récente.
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="card-footer bg-white border-0 p-3 text-center">
+                    <a href="#" class="text-decoration-none fw-bold" style="color: var(--primary-color);">Toutes les commandes <i class="fas fa-arrow-right ms-1"></i></a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var ctx = document.getElementById('salesChart');
+    if (ctx) {
+        var labels = {{ chart_labels|safe }};
+        var data = {{ chart_data|safe }};
+        
+        var gradient = ctx.getContext('2d').createLinearGradient(0, 0, 0, 300);
+        gradient.addColorStop(0, 'rgba(247, 109, 52, 0.5)'); // accent color #f76d34
+        gradient.addColorStop(1, 'rgba(247, 109, 52, 0.0)');
+
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Volume de ventes (FCFA)',
+                    data: data,
+                    backgroundColor: gradient,
+                    borderColor: '#f76d34',
+                    borderWidth: 3,
+                    pointBackgroundColor: '#14599e',
+                    pointBorderColor: '#ffffff',
+                    pointBorderWidth: 2,
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: '#1a1a2e',
+                        padding: 12,
+                        titleFont: { size: 13, family: "'Poppins', sans-serif" },
+                        bodyFont: { size: 14, weight: 'bold', family: "'Poppins', sans-serif" },
+                        displayColors: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: '#f8f9fa', drawBorder: false },
+                        ticks: { font: { family: "'Poppins', sans-serif" }, color: '#adb5bd' }
+                    },
+                    x: {
+                        grid: { display: false, drawBorder: false },
+                        ticks: { font: { family: "'Poppins', sans-serif" }, color: '#adb5bd' }
+                    }
+                }
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

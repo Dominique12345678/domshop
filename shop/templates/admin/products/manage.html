@@ -1,0 +1,193 @@
+{% extends "admin/admin_base.html" %}
+
+{% block title %}Gestion Produits{% endblock %}
+{% block page_title %}Catalogue Produits{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-2">
+    <!-- Barre d'actions en haut -->
+    <div class="row mb-4 align-items-center">
+        <div class="col-md-6 mb-3 mb-md-0">
+            <form method="get" class="d-flex max-w-sm">
+                <div class="input-group input-group-lg shadow-sm rounded-pill overflow-hidden bg-white">
+                    <span class="input-group-text bg-white border-0 ps-4"><i class="fas fa-search text-muted"></i></span>
+                    <input type="text" name="q" placeholder="Rechercher un produit..." value="{{ query }}" class="form-control border-0 bg-white" style="box-shadow: none;">
+                    <button type="submit" class="btn btn-primary px-4 fw-bold">Recherche</button>
+                </div>
+            </form>
+        </div>
+        <div class="col-md-6 text-md-end">
+            <button class="btn btn-primary btn-lg rounded-pill px-4 shadow-sm" onclick="resetForm(); document.getElementById('formSection').scrollIntoView({behavior: 'smooth'})">
+                <i class="fas fa-plus me-2"></i>Nouveau produit
+            </button>
+        </div>
+    </div>
+
+    <!-- Table des produits -->
+    <div class="card border-0 shadow-sm rounded-4 mb-5">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th scope="col" class="py-3 px-4 border-0">Produit</th>
+                            <th scope="col" class="py-3 border-0">Catégorie</th>
+                            <th scope="col" class="py-3 border-0">Prix</th>
+                            <th scope="col" class="py-3 border-0 text-end px-4">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for product in products %}
+                        <tr>
+                            <td class="px-4 py-3 border-bottom-0 border-bottom border-light">
+                                <div class="d-flex align-items-center">
+                                    {% if product.photo %}
+                                        <img src="{{ product.photo.url }}" class="rounded bg-light object-fit-cover me-3" style="width: 50px; height: 50px;" alt="{{ product.pro_name }}">
+                                    {% else %}
+                                        <div class="bg-light text-muted rounded d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px;">
+                                            <i class="fas fa-image"></i>
+                                        </div>
+                                    {% endif %}
+                                    <div>
+                                        <h6 class="mb-0 fw-bold">{{ product.pro_name }}</h6>
+                                        <small class="text-muted d-inline-block text-truncate" style="max-width: 250px;">{{ product.pro_desc }}</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="border-bottom-0 border-bottom border-light">
+                                <span class="badge bg-secondary bg-opacity-10 text-secondary border px-2 py-1 rounded-pill"><i class="fas fa-tag me-1"></i>{{ product.category.cat_name }}</span>
+                            </td>
+                            <td class="border-bottom-0 border-bottom border-light fw-bold" style="color: var(--accent-color);">
+                                {{ product.pro_price|floatformat:0 }} FCFA
+                            </td>
+                            <td class="px-4 text-end border-bottom-0 border-bottom border-light">
+                                <button type="button" class="btn btn-sm btn-light text-primary rounded-pill px-3 me-1" onclick="populateForm(
+                                    '{{ product.pk }}',
+                                    '{{ product.pro_name|escapejs }}',
+                                    '{{ product.pro_desc|escapejs }}',
+                                    '{{ product.pro_price|stringformat:'.2f' }}',
+                                    '{{ product.category.pk }}'
+                                )" data-bs-toggle="tooltip" title="Modifier">
+                                    <i class="fas fa-pen"></i> Modifier
+                                </button>
+                                <a href="?delete={{ product.pk }}" class="btn btn-sm btn-light text-danger rounded-pill px-3" onclick="return confirm('Êtes-vous sûr de vouloir supprimer ce produit ?')" data-bs-toggle="tooltip" title="Supprimer">
+                                    <i class="fas fa-trash-alt"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="text-center py-5 text-muted border-0">
+                                <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                                    <i class="fas fa-box-open fs-2 text-secondary"></i>
+                                </div>
+                                <h5>Aucun produit ne correspond à votre recherche</h5>
+                                <button class="btn btn-outline-primary mt-2" onclick="resetForm()">Ajouter votre premier produit</button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section Formulaire Produit -->
+    <div id="formSection" class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm rounded-4 relative">
+                <div class="card-header bg-white border-0 pt-4 px-4 pb-2">
+                    <h5 id="form-title" class="fw-bold mb-0" style="color: var(--dark-color);">Créer un produit</h5>
+                </div>
+                <div class="card-body p-4">
+                    <form method="post" id="product-form" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <input type="hidden" name="product_id" id="product_id" value="">
+                        
+                        <div class="row g-4 mb-4">
+                            <div class="col-md-8">
+                                <label for="pro_name" class="form-label fw-bold text-muted small text-uppercase">Nom du produit</label>
+                                <input type="text" name="pro_name" id="pro_name" required maxlength="45" class="form-control form-control-lg bg-light border-0">
+                            </div>
+                            
+                            <div class="col-md-4">
+                                <label for="pro_price" class="form-label fw-bold text-muted small text-uppercase">Prix (FCFA)</label>
+                                <div class="input-group input-group-lg">
+                                    <input type="number" name="pro_price" id="pro_price" required min="0" step="0.01" class="form-control bg-light border-0 border-end border-white">
+                                    <span class="input-group-text bg-light border-0 fw-bold" style="color: var(--accent-color);">FCFA</span>
+                                </div>
+                            </div>
+
+                            <div class="col-12">
+                                <label for="pro_desc" class="form-label fw-bold text-muted small text-uppercase">Description</label>
+                                <textarea name="pro_desc" id="pro_desc" required maxlength="255" class="form-control bg-light border-0" rows="3"></textarea>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="category" class="form-label fw-bold text-muted small text-uppercase">Catégorie</label>
+                                <select name="category" id="category" required class="form-select form-select-lg bg-light border-0">
+                                    {% for cat in categories %}
+                                    <option value="{{ cat.pk }}">{{ cat.cat_name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="photo" class="form-label fw-bold text-muted small text-uppercase">Photo du produit</label>
+                                <div class="input-group input-group-lg">
+                                    <input type="file" name="photo" id="photo" accept="image/*" class="form-control bg-light border-0">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <hr class="border-light my-4">
+                        
+                        <div class="d-flex justify-content-end gap-2">
+                            <button type="button" onclick="resetForm()" class="btn btn-light px-4">Annuler</button>
+                            <button type="submit" class="btn btn-primary px-5 fw-bold"><i class="fas fa-save me-2"></i>Enregistrer</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl)
+        });
+    });
+
+    function populateForm(id, name, desc, price, category_id) {
+        document.getElementById('form-title').innerText = 'Modifier le produit';
+        document.getElementById('product_id').value = id;
+        document.getElementById('pro_name').value = name;
+        document.getElementById('pro_desc').value = desc;
+        // Fix formatting issue for numbers
+        document.getElementById('pro_price').value = price.replace(',', '.');
+        document.getElementById('category').value = category_id;
+        document.getElementById('photo').value = '';
+        
+        // Faire défiler jusqu'au formulaire
+        document.getElementById('formSection').scrollIntoView({
+            behavior: 'smooth',
+            block: 'start'
+        });
+    }
+
+    function resetForm() {
+        document.getElementById('form-title').innerText = 'Créer un produit';
+        document.getElementById('product_id').value = '';
+        document.getElementById('pro_name').value = '';
+        document.getElementById('pro_desc').value = '';
+        document.getElementById('pro_price').value = '';
+        document.getElementById('category').selectedIndex = 0;
+        document.getElementById('photo').value = '';
+    }
+</script>
+{% endblock %}

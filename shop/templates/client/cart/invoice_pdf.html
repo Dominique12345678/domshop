@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Facture #{{ order.id }}</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 2cm;
+        }
+        body {
+            font-family: Helvetica, Arial, sans-serif;
+            font-size: 14px;
+            color: #333333;
+        }
+        .header {
+            width: 100%;
+            border-bottom: 2px solid #14599e;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .logo {
+            max-height: 80px;
+        }
+        .title {
+            color: #14599e;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        th {
+            background-color: #14599e;
+            color: white;
+            padding: 8px;
+            text-align: left;
+        }
+        td {
+            padding: 8px;
+            border-bottom: 1px solid #dddddd;
+        }
+        .text-right {
+            text-align: right;
+        }
+        .text-center {
+            text-align: center;
+        }
+        .total-row td {
+            font-weight: bold;
+            font-size: 16px;
+            color: #f76d34;
+            border-bottom: none;
+            padding-top: 15px;
+        }
+    </style>
+</head>
+<body>
+    <table class="header">
+        <tr>
+            <td style="border: none; width: 50%;">
+                <div class="title">FACTURE</div>
+                <p><strong>N° Commande :</strong> #{{ order.id|stringformat:"04d" }}<br>
+                <strong>Date :</strong> {{ order.created_at|date:"d/m/Y H:i" }}</p>
+            </td>
+            <td style="border: none; width: 50%; text-align: right;">
+                <img src="{{ logo_path }}" class="logo">
+            </td>
+        </tr>
+    </table>
+
+    <div style="margin-bottom: 30px;">
+        <h3 style="color: #14599e; border-bottom: 1px solid #ddd; padding-bottom: 5px;">Client</h3>
+        <p>
+            <strong>Nom :</strong> {{ order.user.firstname }} {{ order.user.lastname }}<br>
+            <strong>Email :</strong> {{ order.user.email }}
+        </p>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Produit</th>
+                <th class="text-center">Qté</th>
+                <th class="text-right">Prix unitaire</th>
+                <th class="text-right">Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% load custom_filters %}
+            {% for item in order.items.all %}
+            <tr>
+                <td>{{ item.product.pro_name }}</td>
+                <td class="text-center">{{ item.quantity }}</td>
+                <td class="text-right">{{ item.price|floatformat:0 }} FCFA</td>
+                <td class="text-right">{{ item.quantity|multiply:item.price|floatformat:0 }} FCFA</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+        <tfoot>
+            <tr class="total-row">
+                <td colspan="3" class="text-right" style="border: none;">Total Général :</td>
+                <td class="text-right" style="border: none;">{{ order.total|floatformat:0 }} FCFA</td>
+            </tr>
+        </tfoot>
+    </table>
+
+    <div style="margin-top: 50px; font-size: 12px; color: #666; border-top: 1px solid #ddd; padding-top: 10px;">
+        <p>Merci pour votre achat !<br>
+        Conditions de paiement : Paiement à la commande<br>
+        Livraison sous 2-5 jours ouvrés</p>
+    </div>
+</body>
+</html>

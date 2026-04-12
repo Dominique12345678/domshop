@@ -1,0 +1,79 @@
+{% extends "client/base.html" %}
+{% load static %}
+{% load custom_filters %}
+
+{% block content %}
+<div class="invoice-container" style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; border: 1px solid #eee; box-shadow: 0 0 10px rgba(0,0,0,0.1);">
+    <!-- En-tête -->
+    <div class="invoice-header" style="border-bottom: 2px solid #14599e; padding-bottom: 15px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
+        <div>
+            <h1 style="color: #14599e; margin: 0;">Facture</h1>
+            <p style="margin: 5px 0;"><strong>N° Commande :</strong> #{{ order.id|stringformat:"04d" }}</p>
+        </div>
+        <div style="text-align: right;">
+            <img src="{% static 'photos/logo.png' %}" alt="Logo" style="max-height: 60px;">
+            <p style="margin: 5px 0;">{{ order.created_at|date:"d/m/Y H:i" }}</p>
+        </div>
+    </div>
+
+    <!-- Infos client -->
+    <div class="client-info" style="margin-bottom: 30px;">
+        <h3 style="color: #333; border-bottom: 1px solid #ddd; padding-bottom: 5px;">Client</h3>
+        <p><strong>Nom :</strong> {{ order.user.firstname }} {{ order.user.lastname }}</p>
+        <p><strong>Email :</strong> {{ order.user.email }}</p>
+    </div>
+
+    <!-- Détails commande -->
+    <div class="invoice-details">
+        <h3 style="color: #333; border-bottom: 1px solid #ddd; padding-bottom: 5px;">Détails de la commande</h3>
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+            <thead>
+                <tr style="background-color: #14599e; color: white;">
+                    <th style="padding: 12px; text-align: left;">Produit</th>
+                    <th style="padding: 12px; text-align: center;">Qté</th>
+                    <th style="padding: 12px; text-align: right;">Prix unitaire</th>
+                    <th style="padding: 12px; text-align: right;">Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in order.items.all %}
+                <tr style="border-bottom: 1px solid #ddd;">
+                    <td style="padding: 10px;">{{ item.product.pro_name }}</td>
+                    <td style="padding: 10px; text-align: center;">{{ item.quantity }}</td>
+                    <td style="padding: 10px; text-align: right;">{{ item.price|floatformat:0 }} FCFA</td>
+                    <td style="padding: 10px; text-align: right;">{{ item.quantity|multiply:item.price|floatformat:0 }} FCFA</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot>
+                <tr style="font-weight: bold; font-size: 1.1em;">
+                    <td colspan="3" style="padding: 10px; text-align: right;">Total :</td>
+                    <td style="padding: 10px; text-align: right;">{{ order.total|floatformat:0 }} FCFA</td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+
+    <!-- Mentions légales -->
+    <div class="legal-mentions" style="margin-top: 40px; font-size: 0.8em; color: #666; border-top: 1px solid #ddd; padding-top: 10px;">
+        <p>Merci pour votre achat !</p>
+        <p>Conditions de paiement : Paiement à la commande</p>
+        <p>Livraison sous 2-5 jours ouvrés</p>
+    </div>
+
+    <!-- Boutons d'action -->
+    <div class="actions" style="margin-top: 30px; text-align: center;">
+        <a href="{% url 'shop:download_invoice_pdf' order.id %}" class="btn btn-primary" style="display: inline-block; padding: 10px 20px; background-color: #f76d34; color: white; text-decoration: none; border-radius: 4px; margin-right: 10px;">
+            <i class="fas fa-file-pdf"></i> Télécharger la facture (PDF)
+        </a>
+    </div>
+</div>
+
+<style>
+    @media print {
+        .actions { display: none !important; }
+        body { padding: 20px; }
+        .invoice-container { box-shadow: none; border: none; }
+    }
+</style>
+{% endblock %}

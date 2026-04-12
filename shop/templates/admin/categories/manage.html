@@ -1,0 +1,124 @@
+{% extends "admin/admin_base.html" %}
+
+{% block title %}Gestion Catégories{% endblock %}
+{% block page_title %}Catégories{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-2">
+    <div class="row g-4">
+        <!-- Liste des catégories -->
+        <div class="col-xl-8">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-header bg-white border-0 pt-4 pb-0 px-4 d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold mb-0" style="color: var(--dark-color);">Liste des catégories</h5>
+                    <form method="get" class="d-flex">
+                        <div class="input-group input-group-sm">
+                            <span class="input-group-text bg-light border-end-0 rounded-start-pill"><i class="fas fa-search text-muted"></i></span>
+                            <input type="text" name="search" placeholder="Rechercher..." value="{{ request.GET.search }}" class="form-control border-start-0 bg-light rounded-end-pill">
+                        </div>
+                    </form>
+                </div>
+                <div class="card-body p-4">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th scope="col" class="py-3 px-4 rounded-start-pill border-0">Nom de la catégorie</th>
+                                    <th scope="col" class="py-3 px-4 rounded-end-pill text-end border-0">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for category in categories %}
+                                <tr>
+                                    <td class="px-4 fw-medium text-dark border-bottom-0 border-bottom border-light">
+                                        <div class="d-flex align-items-center">
+                                            <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 35px; height: 35px;">
+                                                <i class="fas fa-folder"></i>
+                                            </div>
+                                            {{ category.cat_name }}
+                                        </div>
+                                    </td>
+                                    <td class="px-4 text-end border-bottom-0 border-bottom border-light">
+                                        <a href="?edit={{ category.id }}" class="btn btn-sm btn-light text-primary rounded-pill me-1 px-3" data-bs-toggle="tooltip" title="Modifier">
+                                            <i class="fas fa-pen"></i> Modifier
+                                        </a>
+                                        <form method="post" class="d-inline-block">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="delete_id" value="{{ category.id }}">
+                                            <button type="submit" class="btn btn-sm btn-light text-danger rounded-pill px-3" onclick="return confirm('Êtes-vous sûr de vouloir supprimer cette catégorie ?')" data-bs-toggle="tooltip" title="Supprimer">
+                                                <i class="fas fa-trash-alt"></i>
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="2" class="text-center py-5 text-muted border-0">
+                                        <i class="fas fa-inbox fs-2 text-light mb-3"></i>
+                                        <p class="mb-0">Aucune catégorie trouvée</p>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Formulaire -->
+        <div class="col-xl-4">
+            <div class="card border-0 shadow-sm rounded-4 sticky-top" style="top: 100px;">
+                <div class="card-header bg-white border-0 pt-4 px-4 pb-0">
+                    <h5 class="fw-bold mb-0" style="color: var(--dark-color);">
+                        {% if selected_category %}Modifier{% else %}Ajouter{% endif %} une catégorie
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    <form method="post" id="categoryForm">
+                        {% csrf_token %}
+                        <input type="hidden" name="category_id" value="{{ selected_category.id|default:'' }}">
+                        
+                        <div class="mb-4">
+                            <label for="id_cat_name" class="form-label fw-bold text-muted small text-uppercase">Nom de la catégorie</label>
+                            <input type="text" name="cat_name" id="id_cat_name" value="{% if selected_category %}{{ selected_category.cat_name }}{% else %}{{ form.cat_name.value|default:'' }}{% endif %}" required maxlength="45" class="form-control form-control-lg bg-light border-0" placeholder="Ex: Informatique">
+                            {% if form.cat_name.errors %}
+                                <div class="text-danger small mt-1"><i class="fas fa-exclamation-circle me-1"></i>{{ form.cat_name.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg rounded-3 py-2">
+                                <i class="fas fa-save me-2"></i> {% if selected_category %}Mettre à jour{% else %}Créer la catégorie{% endif %}
+                            </button>
+                            {% if selected_category %}
+                            <a href="?" class="btn btn-light text-muted btn-lg rounded-3 py-2 mt-2">
+                                Annuler
+                            </a>
+                            {% endif %}
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl)
+        });
+
+        // Scroll vers le formulaire si sélectionné
+        {% if selected_category %}
+            if (window.innerWidth < 1200) {
+                document.getElementById('categoryForm').scrollIntoView({ behavior: 'smooth' });
+            }
+        {% endif %}
+    });
+</script>
+{% endblock %}

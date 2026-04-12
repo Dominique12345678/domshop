@@ -1,0 +1,148 @@
+{% extends "client/base.html" %}
+{% load static %}
+
+{% block title %}Accueil - DomShop{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Fullscreen Hero Section */
+    .hero-video-container {
+        position: relative;
+        height: 60vh;
+        width: 100%;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        margin-top: 0; /* Remove negative margin which was hiding top of video */
+        padding-top: 80px; /* Offset to center everything visually below the 65px navbar */
+    }
+    
+    .hero-video-container video {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover; /* Keeps aspect ratio while filling container */
+        z-index: -1;
+    }
+    
+    .hero-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5); /* Dim the video for better readability */
+        z-index: 0;
+    }
+
+    /* Glassmorphism content card */
+    .hero-content {
+        position: relative;
+        z-index: 1;
+        color: white;
+        text-align: center;
+        padding: 2rem; /* Reduced from 3rem */
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 20px;
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        max-width: 800px;
+        width: 90%;
+        animation: fadeInDown 1s ease-out;
+    }
+
+    .hero-content h1 {
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        margin-bottom: 1rem;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+    }
+
+    .hero-content p {
+        font-size: 1.15rem;
+        margin-bottom: 1.5rem; /* Reduced from 2rem to bring the button higher */
+        text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
+    }
+
+    /* Override base.html main padding which causes a huge gap before products */
+    main.container {
+        padding-top: 2rem !important;
+    }
+</style>
+{% endblock %}
+
+{% block hero %}
+<div class="hero-video-container">
+    <video autoplay loop muted playsinline>
+        <source src="{% static 'videos/videobackground.mp4' %}" type="video/mp4">
+        Votre navigateur ne supporte pas la balise vidéo.
+    </video>
+    <div class="hero-overlay"></div>
+    <div class="hero-content">
+        <h1 class="display-4">Bienvenue sur DomShop</h1>
+        <p class="lead">Découvrez nos produits exceptionnels et profitez d'une expérience d'achat unique en ligne.</p>
+        
+        {% if user.is_authenticated %}
+            <div class="alert alert-success d-inline-block px-4 mb-3" style="background: rgba(25, 135, 84, 0.7); border: none; color: white;">
+                Vous êtes connecté en tant que <strong>{{ user.email }}</strong>
+            </div>
+            <br>
+            <a href="{% url 'shop:product_list_client' %}" class="btn btn-primary btn-lg px-5 rounded-pill shadow">
+                Voir nos produits
+            </a>
+        {% else %}
+            <div class="d-grid gap-3 d-sm-flex justify-content-sm-center">
+                <a href="{% url 'shop:login' %}" class="btn btn-primary btn-lg px-5 py-3 rounded-pill gap-3 shadow">
+                    Se connecter
+                </a>
+                <a href="{% url 'shop:register' %}" class="btn btn-outline-light btn-lg px-5 py-3 rounded-pill shadow">
+                    S'inscrire
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<!-- Section produits vedettes -->
+<div class="row mt-2">
+    <div class="col-12">
+        <h2 class="text-center mb-4 fw-bold" style="color: var(--primary-color);">Nos produits phares</h2>
+        <div class="row justify-content-center">
+            {% for product in featured_products %}
+            <div class="col-md-4 col-sm-6 mb-4">
+                <div class="card h-100 shadow-sm border-0" style="background-color: #fff;">
+                    <!-- Si vous avez des images produit, vous pouvez les ajouter ici -->
+                    {% if product.photo %}
+                    <img src="{{ product.photo.url }}" class="card-img-top" style="height: 200px; object-fit: cover;" alt="{{ product.pro_name }}">
+                    {% endif %}
+                    <div class="card-body d-flex flex-column text-center">
+                        <h5 class="card-title fw-bold" style="color: var(--primary-color);">{{ product.pro_name }}</h5>
+                        <p class="card-text text-muted flex-grow-1">{{ product.pro_desc|truncatechars:100 }}</p>
+                        <h4 class="mb-3" style="color: var(--accent-color);">{{ product.pro_price }} FCFA</h4>
+                        <a href="{% url 'shop:product_list_client' %}?q={{ product.pro_name }}" class="btn text-white mt-auto rounded-pill" style="background-color: var(--accent-color);">Voir ce produit</a>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-12">
+                <p class="text-center text-muted">Aucun produit phare disponible pour le moment.</p>
+            </div>
+            {% endfor %}
+            {% if not featured_products %}
+            <div class="col-12 mt-3 text-center">
+                 <a href="{% url 'shop:product_list_client' %}" class="btn btn-primary btn-lg rounded-pill shadow">Parcourir notre catalogue</a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

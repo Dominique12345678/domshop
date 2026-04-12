@@ -1,0 +1,322 @@
+{% load static %}
+{% load socialaccount %}
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Créer un compte - DomShop</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #14599e;
+            --secondary-color: #f76d34;
+            --light-color: #f8f9fa;
+            --dark-color: #1a1a2e;
+            --border-color: #e0e0e0;
+            --error-color: #e63946;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .register-container {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 550px;
+            padding: 40px;
+            animation: fadeIn 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .register-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .brand-logo {
+            height: 60px;
+            margin-bottom: 15px;
+            object-fit: contain;
+        }
+
+        .register-header h1 {
+            color: var(--primary-color);
+            font-weight: 700;
+            font-size: 26px;
+            margin-bottom: 5px;
+        }
+
+        .register-header p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .register-form .form-row {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .register-form .form-group {
+            margin-bottom: 20px;
+            position: relative;
+            flex: 1;
+        }
+
+        .register-form label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--dark-color);
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .register-form input {
+            width: 100%;
+            padding: 12px 15px 12px 42px;
+            border: 2px solid transparent;
+            border-radius: 10px;
+            font-size: 14px;
+            transition: all 0.3s;
+            background-color: #f1f3f6;
+            color: var(--dark-color);
+        }
+
+        .register-form input:focus {
+            border-color: var(--primary-color);
+            background-color: #fff;
+            outline: none;
+            box-shadow: 0 5px 15px rgba(20, 89, 158, 0.1);
+        }
+
+        .register-form .input-icon {
+            position: absolute;
+            left: 15px;
+            top: 38px;
+            color: #999;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .register-form input:focus+.input-icon {
+            color: var(--primary-color);
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 14px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 10px;
+            box-shadow: 0 4px 12px rgba(20, 89, 158, 0.2);
+        }
+
+        .btn-submit:hover {
+            background-color: #0d4a85;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(20, 89, 158, 0.3);
+        }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            text-align: center;
+            margin: 25px 0;
+            color: #999;
+        }
+
+        .divider::before,
+        .divider::after {
+            content: '';
+            flex: 1;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .divider span {
+            padding: 0 15px;
+            font-size: 11px;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+
+        .btn-google {
+            width: 100%;
+            padding: 12px;
+            background-color: white;
+            color: #555;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            text-decoration: none;
+        }
+
+        .btn-google:hover {
+            background-color: #f8f9fa;
+            border-color: #ccc;
+        }
+
+        .btn-google img {
+            width: 24px;
+            height: 24px;
+            object-fit: contain;
+        }
+
+        .register-footer {
+            text-align: center;
+            margin-top: 25px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .register-footer a {
+            color: var(--secondary-color);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .errorlist {
+            list-style: none;
+            color: var(--error-color);
+            font-size: 12px;
+            margin-bottom: 15px;
+            padding: 10px;
+            background: rgba(230, 57, 70, 0.1);
+            border-radius: 8px;
+        }
+
+        @media (max-width: 580px) {
+            .register-form .form-row {
+                flex-direction: column;
+                gap: 0;
+            }
+
+            .register-container {
+                padding: 30px 20px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="register-container">
+        <div class="register-header">
+            <img src="{% static 'photos/logo.png' %}" alt="DomShop Logo" class="brand-logo">
+            <h1>Créer un compte</h1>
+            <p>Rejoignez la communauté DomShop</p>
+        </div>
+
+        {% if form.errors %}
+        <div class="errorlist">
+            {{ form.non_field_errors }}
+            Une erreur est survenue lors de l'inscription. Veuillez vérifier les champs.
+        </div>
+        {% endif %}
+
+        <form method="POST" action="" class="register-form">
+            {% csrf_token %}
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="firstname">Prénom</label>
+                    <input type="text" id="firstname" name="firstname" value="{{ form.firstname.value|default:'' }}"
+                        placeholder="Ex: Jean" required>
+                    <i class="fas fa-user input-icon"></i>
+                </div>
+                <div class="form-group">
+                    <label for="lastname">Nom</label>
+                    <input type="text" id="lastname" name="lastname" value="{{ form.lastname.value|default:'' }}"
+                        placeholder="Ex: Dupont" required>
+                    <i class="fas fa-user input-icon"></i>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" value="{{ form.email.value|default:'' }}"
+                    placeholder="votre@email.com" required>
+                <i class="fas fa-envelope input-icon"></i>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="password1">Mot de passe</label>
+                    <input type="password" id="password1" name="password1" placeholder="••••••••" required>
+                    <i class="fas fa-lock input-icon"></i>
+                </div>
+                <div class="form-group">
+                    <label for="password2">Confirmation</label>
+                    <input type="password" id="password2" name="password2" placeholder="••••••••" required>
+                    <i class="fas fa-check-circle input-icon"></i>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-submit">
+                S'inscrire
+            </button>
+        </form>
+
+        <div class="divider">
+            <span>Ou s'inscrire avec</span>
+        </div>
+
+        <form method="post" action="{% provider_login_url 'google' %}" id="google-login-form">
+            {% csrf_token %}
+            <button type="submit" class="btn-google">
+                <img src="{% static 'photos/Google-logo.png' %}" alt="Google">
+                Google
+            </button>
+        </form>
+
+        <div class="register-footer">
+            <p>Déjà un compte ? <a href="{% url 'shop:login' %}">Se connecter</a></p>
+        </div>
+    </div>
+</body>
+
+</html>

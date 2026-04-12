@@ -1,0 +1,162 @@
+{% extends "client/base.html" %}
+{% load static %}
+{% load humanize %}
+
+{% block extra_css %}
+<!-- SweetAlert2 -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+<style>
+    .swal2-popup {
+        border-radius: 20px !important;
+        font-family: 'Poppins', sans-serif;
+    }
+    .btn-confirm-delete {
+        background-color: var(--accent-color) !important;
+        border-radius: 10px !important;
+    }
+    .btn-cancel-delete {
+        border-radius: 10px !important;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- Meta CSRF pour JS -->
+<meta name="csrf-token" content="{{ csrf_token }}">
+
+<div class="container py-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold"><i class="fas fa-shopping-cart me-2 text-primary"></i>Mon Panier</h2>
+        <span class="badge bg-primary rounded-pill px-3 py-2">{{ items|length }} Article(s)</span>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
+        <div class="card-body p-0">
+            <table id="cart-table" class="table table-hover align-middle mb-0">
+    <thead>
+        <tr>
+            <th>Produit</th>
+            <th style="width: 150px;">Quantité</th>
+            <th>Prix</th>
+            <th>Total</th>
+            <th class="text-center">Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for item in items %}
+        <tr data-item-id="{{ item.id }}">
+            <td>{{ item.product.pro_name }}</td>
+            <td>
+                <input type="number"
+                       class="quantity-input form-control"
+                       value="{{ item.quantity }}"
+                       min="1"
+                       data-update-url="{% url 'shop:update_cart' item.id %}">
+            </td>
+            <td class="unit-price" data-price="{{ item.product.pro_price }}">
+                {{ item.product.pro_price|intcomma }} Fcfa
+            </td>
+            <td class="item-total">
+                {{ item.total_price|intcomma }} Fcfa
+            </td>
+            <td class="text-center">
+                <a href="#" 
+                   class="btn btn-sm btn-outline-danger rounded-pill px-3 delete-item" 
+                   data-url="{% url 'shop:remove_from_cart' item.id %}"
+                   data-name="{{ item.product.pro_name }}">
+                    <i class="fas fa-trash-alt me-1"></i> Retirer
+                </a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+    <div class="row align-items-center bg-white p-4 rounded-4 shadow-sm">
+        <div class="col-md-6 mb-3 mb-md-0">
+            <h4 class="mb-0">Total de votre commande: <span class="fw-bold text-primary" id="total-amount">{{ total|intcomma }}</span> <span class="small text-muted">Fcfa</span></h4>
+        </div>
+        <div class="col-md-6 text-md-end">
+            <a href="{% url 'shop:product_list_client' %}" class="btn btn-link text-muted text-decoration-none me-3">Continuer mes achats</a>
+            <form method="post" action="{% url 'shop:confirm_order' %}" class="d-inline">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-primary btn-lg rounded-pill px-5 shadow-sm">
+                    Commander <i class="fas fa-arrow-right ms-2"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- SweetAlert2 -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute("content");
+
+    // Gestion de la suppression avec SweetAlert2
+    document.querySelectorAll(".delete-item").forEach(button => {
+        button.addEventListener("click", function (e) {
+            e.preventDefault();
+            const url = this.dataset.url;
+            const productName = this.dataset.name;
+
+            Swal.fire({
+                title: 'Retirer du panier ?',
+                text: `Souhaitez-vous vraiment retirer "${productName}" de votre panier ?`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#14599e',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Oui, retirer',
+                cancelButtonText: 'Annuler',
+                reverseButtons: true,
+                customClass: {
+                    confirmButton: 'btn btn-primary px-4 fw-bold',
+                    cancelButton: 'btn btn-light px-4 me-3'
+                },
+                buttonsStyling: false
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = url;
+                }
+            });
+        });
+    });
+
+    // Gestion de la mise à jour des quantités (existant)
+    document.querySelectorAll(".quantity-input").forEach(input => {
+        input.addEventListener("change", function () {
+            const quantity = parseInt(this.value);
+            if (quantity < 1) return;
+
+            const url = this.dataset.updateUrl;
+            const row = this.closest("tr");
+            const unitPrice = parseInt(row.querySelector(".unit-price").dataset.price);
+
+            fetch(url, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": csrfToken,
+                },
+                body: JSON.stringify({ quantity: quantity })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const lineTotal = quantity * unitPrice;
+                    row.querySelector(".item-total").innerText = lineTotal.toLocaleString() + " Fcfa";
+                    document.getElementById("total-amount").innerText = data.cart_total.toLocaleString() + " Fcfa";
+                }
+            })
+            .catch(error => console.error("Erreur AJAX :", error));
+        });
+    });
+});
+</script>
+{% endblock %}

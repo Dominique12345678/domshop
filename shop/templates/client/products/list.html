@@ -1,0 +1,130 @@
+{% extends "client/base.html" %}
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold" style="color: var(--primary-color);">Nos Produits</h2>
+        <a href="{% url 'shop:view_cart' %}" class="btn text-white rounded-pill px-4" style="background-color: var(--accent-color);">
+            <i class="fas fa-shopping-cart me-2"></i> Voir le panier
+        </a>
+    </div>
+
+    <!-- Filtres et Recherche Dynamique -->
+    <div class="card border-0 shadow-sm mb-4" style="border-radius: 12px;">
+        <div class="card-body">
+            <form id="searchForm" class="row g-3">
+                <div class="col-md-6">
+                    <input type="text" id="searchInput" name="q" class="form-control rounded-pill" placeholder="Rechercher un produit..." value="{{ request.GET.q }}">
+                </div>
+                <div class="col-md-4">
+                    <select id="categorySelect" name="category" class="form-select rounded-pill">
+                        <option value="">Toutes les catégories</option>
+                        {% for cat in categories %}
+                            <option value="{{ cat.id }}" {% if request.GET.category == cat.id|stringformat:"s" %}selected{% endif %}>{{ cat.cat_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn text-white rounded-pill w-100" style="background-color: var(--primary-color);">
+                        <i class="fas fa-search me-1"></i> Rechercher
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Conteneur pour afficher les résultats Ajax -->
+    <div class="row" id="productGrid">
+        {% include "client/products/product_grid.html" %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchForm = document.getElementById('searchForm');
+        const searchInput = document.getElementById('searchInput');
+        const categorySelect = document.getElementById('categorySelect');
+        const productGrid = document.getElementById('productGrid');
+
+        function fetchProducts() {
+            const formData = new FormData(searchForm);
+            const params = new URLSearchParams(formData).toString();
+            
+            fetch(`{% url 'shop:product_list_client' %}?` + params, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.html) {
+                    productGrid.innerHTML = data.html;
+                }
+            })
+            .catch(error => {
+                console.error("Erreur de recherche dynamique: ", error);
+            });
+        }
+
+        searchForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            fetchProducts();
+        });
+
+        searchInput.addEventListener('keyup', function() {
+            fetchProducts();
+        });
+
+        categorySelect.addEventListener('change', function() {
+            fetchProducts();
+        });
+
+        // Event delegation for "Add to Cart" buttons
+        document.addEventListener('click', function(e) {
+            const btn = e.target.closest('.add-to-cart-btn');
+            if (btn) {
+                e.preventDefault();
+                const url = btn.getAttribute('data-url');
+                
+                // Fetch to add-to-cart endpoint with AJAX header
+                fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    // Show Toast Notification
+                    const toastElement = document.getElementById('liveToast');
+                    const toastMessage = document.getElementById('toastMessage');
+                    
+                    toastMessage.textContent = data.message;
+                    
+                    // Set toast color based on status
+                    if (data.status === 'success') {
+                        toastElement.classList.replace('bg-info', 'bg-success');
+                        toastElement.classList.add('bg-success');
+                    } else {
+                        toastElement.classList.replace('bg-success', 'bg-info');
+                        toastElement.classList.add('bg-info');
+                    }
+                    
+                    const toast = new bootstrap.Toast(toastElement);
+                    toast.show();
+                    
+                    // Update button state visually without reloading
+                    btn.disabled = true;
+                    btn.className = "btn btn-secondary mt-auto rounded-pill w-100";
+                    btn.removeAttribute('onmouseover');
+                    btn.removeAttribute('onmouseout');
+                    btn.style = "";
+                    btn.innerHTML = '<i class="fas fa-check"></i> Déjà au panier';
+                })
+                .catch(error => console.error("Erreur ajout au panier: ", error));
+            }
+        });
+    });
+</script>
+{% endblock %}
