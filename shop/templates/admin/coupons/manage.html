@@ -1,0 +1,203 @@
+{% extends "client/base.html" %}
+{% load static %}
+
+{% block title %}Gestion des Codes Promo - Admin{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="d-flex justify-content-between align-items-center mb-5">
+        <div>
+            <h1 class="display-6 fw-bold mb-1" style="color: var(--primary-color);">Codes Promotionnels</h1>
+            <p class="text-muted">Gérez les remises et offres spéciales pour vos clients.</p>
+        </div>
+        <button class="btn btn-primary rounded-pill px-4 py-2 shadow-sm" data-bs-toggle="modal" data-bs-target="#couponModal" onclick="resetForm()">
+            <i class="fas fa-plus me-2"></i> Nouveau Code
+        </button>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="bg-light">
+                    <tr>
+                        <th class="px-4 py-3">Code</th>
+                        <th class="py-3">Type</th>
+                        <th class="py-3">Valeur</th>
+                        <th class="py-3">Validité</th>
+                        <th class="py-3">Statut</th>
+                        <th class="px-4 py-3 text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for coupon in coupons %}
+                    <tr>
+                        <td class="px-4">
+                            <span class="fw-bold text-primary">{{ coupon.code }}</span>
+                        </td>
+                        <td>
+                            <span class="badge rounded-pill bg-opacity-10 {% if coupon.discount_type == 'percent' %}bg-info text-info{% else %}bg-primary text-primary{% endif %}">
+                                {{ coupon.get_discount_type_display }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="fw-bold">
+                                {% if coupon.discount_type == 'percent' %}
+                                    {{ coupon.discount_percent }}%
+                                {% else %}
+                                    {{ coupon.discount_amount|floatformat:0 }} FCFA
+                                {% endif %}
+                            </span>
+                        </td>
+                        <td>
+                            <div class="small">
+                                <i class="far fa-calendar-alt me-1 text-muted"></i> {{ coupon.valid_from|date:"d/m/y" }} → {{ coupon.valid_to|date:"d/m/y" }}
+                                {% if coupon.valid_to < now %}
+                                    <span class="badge bg-danger ms-1">Expiré</span>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td>
+                            {% if coupon.active %}
+                                <span class="badge bg-success rounded-pill px-3">Actif</span>
+                            {% else %}
+                                <span class="badge bg-secondary rounded-pill px-3">Inactif</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-4 text-end">
+                            <button class="btn btn-sm btn-outline-primary rounded-circle me-1" 
+                                    onclick="editCoupon('{{ coupon.id }}', '{{ coupon.code }}', '{{ coupon.discount_type }}', '{{ coupon.discount_percent|default:0 }}', '{{ coupon.discount_amount|default:0 }}', '{{ coupon.valid_from|date:'Y-m-d\TH:i' }}', '{{ coupon.valid_to|date:'Y-m-d\TH:i' }}', {{ coupon.active|lower }})"
+                                    title="Modifier">
+                                <i class="fas fa-pen"></i>
+                            </button>
+                            <form action="" method="POST" class="d-inline" onsubmit="return confirm('Supprimer ce code promo ?');">
+                                {% csrf_token %}
+                                <input type="hidden" name="delete_id" value="{{ coupon.id }}">
+                                <button type="submit" class="btn btn-sm btn-outline-danger rounded-circle" title="Supprimer">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center py-5 text-muted">
+                            <i class="fas fa-ticket-alt fa-3x mb-3 opacity-25"></i>
+                            <p>Aucun code promo créé pour le moment.</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Formulaire -->
+<div class="modal fade" id="couponModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow rounded-4">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="fw-bold modal-title" id="modalTitle">Nouveau Code Promo</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="couponForm" method="POST">
+                {% csrf_token %}
+                <input type="hidden" name="coupon_id" id="coupon_id">
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Code Promo</label>
+                        {{ form.code }}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Type de remise</label>
+                        {{ form.discount_type }}
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-md-6" id="percent-wrap">
+                            <label class="form-label fw-bold small">Pourcentage (%)</label>
+                            {{ form.discount_percent }}
+                        </div>
+                        <div class="col-md-6" id="amount-wrap">
+                            <label class="form-label fw-bold small">Montant (FCFA)</label>
+                            {{ form.discount_amount }}
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mt-1">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small">Début</label>
+                            {{ form.valid_from }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small">Fin</label>
+                            {{ form.valid_to }}
+                        </div>
+                    </div>
+
+                    <div class="mt-4 p-3 bg-light rounded-3">
+                        <div class="form-check form-switch">
+                            {{ form.active }}
+                            <label class="form-check-label fw-bold" for="id_active">Actif immediately</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-link text-muted text-decoration-none" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-primary rounded-pill px-4">Enregistrer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const typeSelect = document.getElementById('id_discount_type');
+    const percentWrap = document.getElementById('percent-wrap');
+    const amountWrap = document.getElementById('amount-wrap');
+
+    function toggleDiscountFields() {
+        if (typeSelect.value === 'percent') {
+            percentWrap.style.display = 'block';
+            amountWrap.style.display = 'none';
+            document.getElementById('id_discount_amount').value = '';
+        } else {
+            percentWrap.style.display = 'none';
+            amountWrap.style.display = 'block';
+            document.getElementById('id_discount_percent').value = '';
+        }
+    }
+
+    typeSelect.addEventListener('change', toggleDiscountFields);
+    
+    // Initial call
+    toggleDiscountFields();
+
+    function resetForm() {
+        document.getElementById('couponForm').reset();
+        document.getElementById('coupon_id').value = '';
+        document.getElementById('modalTitle').innerText = 'Nouveau Code Promo';
+        toggleDiscountFields();
+    }
+
+    function editCoupon(id, code, type, percent, amount, from, to, active) {
+        document.getElementById('coupon_id').value = id;
+        document.getElementById('id_code').value = code;
+        document.getElementById('id_discount_type').value = type;
+        document.getElementById('id_discount_percent').value = percent;
+        document.getElementById('id_discount_amount').value = amount;
+        document.getElementById('id_valid_from').value = from;
+        document.getElementById('id_valid_to').value = to;
+        document.getElementById('id_active').checked = active;
+        
+        document.getElementById('modalTitle').innerText = 'Modifier le Code Promo';
+        toggleDiscountFields();
+        
+        const modal = new bootstrap.Modal(document.getElementById('couponModal'));
+        modal.show();
+    }
+</script>
+{% endblock %}

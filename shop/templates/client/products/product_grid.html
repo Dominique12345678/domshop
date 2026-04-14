@@ -1,32 +1,128 @@
+{% load static %}
+{% load humanize %}
+
 {% for product in products %}
-<div class="col-md-3 col-sm-6 mb-4 animate__animated animate__zoomIn">
-    <div class="card h-100 shadow-sm border-0" style="background-color: #fff; transition: transform 0.3s; border-radius: 12px; overflow: hidden;">
+<div class="col-lg-4 col-md-6 mb-4 animate__animated animate__fadeIn animate__faster">
+    <div class="card h-100 product-card">
+        <!-- Badge Stock -->
+        {% if product.stock == 0 %}
+            <span class="badge bg-danger position-absolute m-3 px-3 py-2 rounded-pill shadow-sm">Épuisé</span>
+        {% elif product.stock <= 5 %}
+            <span class="badge bg-warning text-dark position-absolute m-3 px-3 py-2 rounded-pill shadow-sm">Stock limité</span>
+        {% endif %}
+
+        <!-- Bouton Wishlist -->
+        <button class="btn-wishlist position-absolute end-0 m-3 toggle-wishlist {% if product.id in wishlist_items %}active{% endif %}" 
+                data-url="{% url 'shop:toggle_wishlist' product.id %}"
+                title="Ajouter aux favoris">
+            <i class="{% if product.id in wishlist_items %}fas{% else %}far{% endif %} fa-heart"></i>
+        </button>
+
         {% if product.photo %}
-            <img src="{{ product.photo.url }}" class="card-img-top" style="height: 200px; object-fit: cover;" alt="{{ product.pro_name }}">
+            <div class="img-wrapper overflow-hidden">
+                <a href="{% url 'shop:product_detail' product.id %}">
+                    <img src="{{ product.photo.url }}" class="card-img-top hover-zoom" alt="{{ product.pro_name }}">
+                </a>
+            </div>
         {% else %}
-            <div style="height: 200px; background-color: #f8f9fa; display: flex; align-items: center; justify-content: center;">
-                <span class="text-muted">Aucune image</span>
+            <div class="empty-img">
+                <i class="fas fa-image fa-3x opacity-25"></i>
             </div>
         {% endif %}
-        <div class="card-body d-flex flex-column text-center">
-            <h5 class="card-title fw-bold" style="color: var(--primary-color);">{{ product.pro_name }}</h5>
-            <p class="card-text text-muted flex-grow-1" style="font-size: 0.9rem;">{{ product.pro_desc|truncatechars:80 }}</p>
-            <h5 class="mb-3" style="color: var(--accent-color); font-weight: bold;">{{ product.pro_price }} FCFA</h5>
+
+        <div class="card-body p-4 d-flex flex-column">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <small class="text-uppercase text-muted fw-bold">{{ product.category.cat_name }}</small>
+                <div class="rating-stars text-warning small">
+                    {% if product.avg_rating %}
+                        {% for i in "12345" %}
+                            {% if forloop.counter <= product.avg_rating %}
+                                <i class="fas fa-star"></i>
+                            {% else %}
+                                <i class="far fa-star"></i>
+                            {% endif %}
+                        {% endfor %}
+                    {% else %}
+                        <span class="text-muted opacity-50 small">Nouveau</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <h5 class="fw-bold mb-2">
+                <a href="{% url 'shop:product_detail' product.id %}" class="text-decoration-none text-reset hover-primary">
+                    {{ product.pro_name }}
+                </a>
+            </h5>
+            <p class="text-muted small mb-4 flex-grow-1">{{ product.pro_desc|truncatechars:60 }}</p>
             
-            {% if product.id in cart_items %}
-                <button disabled class="btn btn-secondary mt-auto rounded-pill w-100">
-                    <i class="fas fa-check"></i> Déjà au panier
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <span class="h5 fw-bold text-accent mb-0">{{ product.pro_price|intcomma }} <small>Fcfa</small></span>
+            </div>
+
+            {% if product.stock > 0 %}
+                <button data-url="{% url 'shop:add_to_cart' product.id %}" 
+                        class="btn btn-primary w-100 rounded-pill py-3 fw-bold shadow-sm add-to-cart-btn {% if product.id in cart_items %}active{% endif %}"
+                        {% if product.id in cart_items %}disabled{% endif %}>
+                    <i class="fas {% if product.id in cart_items %}fa-check{% else %}fa-shopping-cart{% endif %} me-2"></i>
+                    {% if product.id in cart_items %}Déjà ajouté{% else %}Ajouter au panier{% endif %}
                 </button>
             {% else %}
-                <button data-url="{% url 'shop:add_to_cart' product.id %}" class="btn text-white mt-auto rounded-pill w-100 add-to-cart-btn" style="background-color: var(--primary-color); transition: background-color 0.3s;" onmouseover="this.style.backgroundColor='var(--accent-color)'" onmouseout="this.style.backgroundColor='var(--primary-color)'">
-                    <i class="fas fa-cart-plus"></i> Ajouter au panier
-                </button>
+                <button class="btn btn-outline-secondary w-100 rounded-pill py-3" disabled>Indisponible</button>
             {% endif %}
         </div>
     </div>
 </div>
 {% empty %}
-<div class="col-12 text-center my-5">
-    <p class="text-muted fs-5">Aucun produit ne correspond à votre recherche.</p>
+<div class="col-12 text-center py-5">
+    <div class="opacity-25 mb-3"><i class="fas fa-search fa-4x"></i></div>
+    <h4 class="text-muted">Aucun produit trouvé.</h4>
 </div>
 {% endfor %}
+
+<style>
+    :root {
+        --animate-duration: 400ms !important; /* Global faster animations */
+    }
+    .product-card {
+        border: none;
+        transition: all 0.3s ease !important;
+    }
+    .product-card .img-wrapper {
+        border-radius: 20px 20px 0 0;
+        height: 220px;
+    }
+    .product-card img {
+        height: 100%;
+        width: 100%;
+        object-fit: cover;
+        transition: transform 0.4s ease;
+    }
+    .product-card:hover img { transform: scale(1.05); }
+    
+    .btn-wishlist {
+        background: rgba(255,255,255,0.9);
+        border: none;
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        color: #ccc;
+        transition: all 0.2s;
+        z-index: 5;
+    }
+    .btn-wishlist.active { color: #f76d34; }
+    
+    .text-accent { color: var(--accent-color); }
+    
+    .add-to-cart-btn {
+        background-color: var(--primary-color) !important;
+        border: none;
+        transition: all 0.2s !important;
+    }
+    .add-to-cart-btn:hover {
+        background-color: var(--accent-color) !important;
+        transform: translateY(-2px);
+    }
+    .add-to-cart-btn.active {
+        background-color: #28a745 !important;
+    }
+</style>

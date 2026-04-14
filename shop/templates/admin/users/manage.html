@@ -1,0 +1,73 @@
+{% extends "admin/admin_base.html" %}
+{% block title %}Gestion Utilisateurs{% endblock %}
+{% block page_title %}Gestion des Utilisateurs{% endblock %}
+
+{% block content %}
+<div class="card border-0 shadow-sm p-4 h-100">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h5 class="fw-bold mb-0">Liste des comptes</h5>
+        <form method="GET" class="d-flex gap-2">
+            <input type="text" name="q" class="form-control rounded-pill border-0 bg-light px-3" placeholder="Rechercher..." value="{{ query }}">
+            <button class="btn btn-primary rounded-pill px-4"><i class="fas fa-search"></i></button>
+        </form>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead class="bg-light">
+                <tr>
+                    <th>Utilisateur</th>
+                    <th>Email</th>
+                    <th>Rôle</th>
+                    <th>Status</th>
+                    <th>Date Inscription</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for u in users %}
+                <tr>
+                    <td>
+                        <div class="d-flex align-items-center">
+                            <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
+                                {{ u.firstname|first|upper }}
+                            </div>
+                            <span class="fw-bold">{{ u.firstname }} {{ u.lastname }}</span>
+                        </div>
+                    </td>
+                    <td>{{ u.email }}</td>
+                    <td>
+                        <span class="badge {% if u.is_superuser %}bg-danger{% else %}bg-info{% endif %} rounded-pill">
+                            {{ u.role.role_name }}
+                        </span>
+                    </td>
+                    <td>
+                        {% if u.is_banned %}
+                            <span class="badge bg-danger rounded-pill"><i class="fas fa-user-slash me-1"></i> Banni</span>
+                        {% elif not u.is_active %}
+                            <span class="badge bg-warning text-dark rounded-pill"><i class="fas fa-clock me-1"></i> En attente</span>
+                        {% else %}
+                            <span class="badge bg-success rounded-pill"><i class="fas fa-check me-1"></i> Actif</span>
+                        {% endif %}
+                    </td>
+                    <td class="small text-muted">{{ u.created_at|date:"d/m/Y" }}</td>
+                    <td class="text-end">
+                        {% if not u.is_superuser %}
+                            {% if u.is_banned %}
+                                <a href="{% url 'shop:unban_user' u.id %}" class="btn btn-sm btn-outline-success rounded-pill px-3">
+                                    <i class="fas fa-user-check me-1"></i> Réactiver
+                                </a>
+                            {% else %}
+                                <a href="{% url 'shop:ban_user' u.id %}" class="btn btn-sm btn-outline-danger rounded-pill px-3">
+                                    <i class="fas fa-ban me-1"></i> Bannir
+                                </a>
+                            {% endif %}
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

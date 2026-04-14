@@ -6,17 +6,17 @@ from django.contrib import messages
 from django.db.models import Q
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST 
-from .forms import ProductForm
-from .models import User, Role, Product, Category
-from .forms import CustomUserCreationForm, CategoryForm
-from .models import User, Role, Product, Category, CartItem, Order, OrderItem
-import json
-from django.template.loader import get_template
+from .forms import CustomUserCreationForm, CategoryForm, ProductForm, CouponForm
+from .models import User, Role, Product, Category, CartItem, Order, OrderItem, UserOTP, Wishlist, Review, Coupon
+import json, random
+from django.core.mail import send_mail
+from django.template.loader import get_template, render_to_string
 from django.http import HttpResponse
 import tempfile
 from xhtml2pdf import pisa
 from django.conf import settings
 import os
+from django.utils import timezone
 
 
 
@@ -89,9 +89,13 @@ def custom_login(request):
         user = authenticate(request, email=email, password=password)
         
         if user is not None:
-            if not user.is_active:
-                messages.error(request, "Compte inactif. Contactez l'administrateur.")
+            if user.is_banned:
+                messages.error(request, "Votre compte a été banni. Contactez le support.")
                 return render(request, 'client/authentification/login.html')
+
+            if not user.is_active:
+                messages.error(request, "Veuillez confirmer votre email avant de vous connecter.")
+                return redirect('shop:verify_otp', user_id=user.id)
 
             login(request, user)
 
@@ -119,16 +123,50 @@ def register(request):
     if request.method == 'POST':
         form = CustomUserCreationForm(request.POST)
         if form.is_valid():
-            user = form.save(commit=False)
-            client_role, created = Role.objects.get_or_create(role_name='client')
-            user.role = client_role
-            user.save()
-            
-            messages.success(request, "Inscription réussie. Vous pouvez maintenant vous connecter.")
-            return redirect('shop:login')
+            user = None
+            try:
+                user = form.save(commit=False)
+                client_role, _ = Role.objects.get_or_create(role_name='client')
+                user.role = client_role
+                user.is_active = False  # Forcer confirmation par OTP
+                user.save()
+
+                # Génération et sauvegarde du code OTP
+                otp_code = str(random.randint(100000, 999999))
+                UserOTP.objects.update_or_create(
+                    user=user,
+                    defaults={'code': otp_code, 'created_at': timezone.now()}
+                )
+
+                # Envoi de l'email de confirmation (AMÉLIORÉ)
+                subject = "Bienvenue sur DomShop - Code de confirmation"
+                message = f"Bonjour {user.firstname},\n\nMerci d'avoir rejoint DomShop ! Pour activer votre compte, veuillez utiliser le code suivant :\n\n{otp_code}\n\nCe code expirera dans 10 minutes."
+                from_email = settings.DEFAULT_FROM_EMAIL
+                
+                try:
+                    send_mail(subject, message, from_email, [user.email])
+                    messages.success(request, "Un code de confirmation a été envoyé à votre adresse email.")
+                except Exception as mail_err:
+                    print(f"Erreur email: {mail_err}")
+                    messages.warning(request, "Compte créé, mais l'envoi de l'email a échoué. Contactez le support.")
+
+                return redirect('shop:verify_otp', user_id=user.id)
+
+            except Exception as e:
+                # En cas d'erreur, supprimer l'utilisateur partiellement créé
+                if user and user.pk:
+                    user.delete()
+                error_msg = str(e)
+                # Fournir des messages d'erreur lisibles selon le type
+                if 'UNIQUE constraint' in error_msg or 'unique' in error_msg.lower():
+                    messages.error(request, "Un compte existe déjà avec cette adresse email.")
+                elif 'mail' in error_msg.lower() or 'smtp' in error_msg.lower() or 'connection' in error_msg.lower():
+                    messages.error(request, "Votre compte a été créé mais l'envoi de l'email a échoué. Veuillez contacter le support.")
+                else:
+                    messages.error(request, f"Une erreur est survenue lors de l'inscription : {error_msg}")
     else:
         form = CustomUserCreationForm()
-    
+
     return render(request, 'client/authentification/register.html', {'form': form})
 
 
@@ -232,8 +270,13 @@ def product_manage(request):
 def product_list_client(request):
     query = request.GET.get('q', '')
     category_id = request.GET.get('category', '')
+    min_price = request.GET.get('min_price', '')
+    max_price = request.GET.get('max_price', '')
+    sort_by = request.GET.get('sort', 'newest')
 
-    products = Product.objects.all()
+    from django.db.models import Avg, Q
+
+    products = Product.objects.all().annotate(avg_rating=Avg('reviews__rating'))
 
     if query:
         products = products.filter(
@@ -244,22 +287,159 @@ def product_list_client(request):
     if category_id:
         products = products.filter(category_id=category_id)
 
+    if min_price:
+        products = products.filter(pro_price__gte=min_price)
+    
+    if max_price:
+        products = products.filter(pro_price__lte=max_price)
+
+    if sort_by == 'price_asc':
+        products = products.order_by('pro_price')
+    elif sort_by == 'price_desc':
+        products = products.order_by('-pro_price')
+    elif sort_by == 'rating':
+        products = products.order_by('-avg_rating')
+    else:
+        products = products.order_by('-created_at')
+
     categories = Category.objects.all()
     cart_items = CartItem.objects.filter(user=request.user).values_list('product_id', flat=True)
+    wishlist_items = Wishlist.objects.filter(user=request.user).values_list('product_id', flat=True)
 
-    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-        html = render_to_string('client/products/product_grid.html', {
-            'products': products, 
-            'cart_items': cart_items, 
-            'request': request
-        })
-        return JsonResponse({'html': html})
-
-    return render(request, 'client/products/list.html', {
+    context = {
         'products': products,
         'categories': categories,
-        'cart_items': cart_items
-    })
+        'cart_items': cart_items,
+        'wishlist_items': wishlist_items,
+        'min_price': min_price,
+        'max_price': max_price,
+        'sort_by': sort_by,
+        'query': query
+    }
+
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        html = render_to_string('client/products/product_grid.html', {**context, 'request': request})
+        return JsonResponse({'html': html, 'count': products.count()})
+
+    return render(request, 'client/products/list.html', context)
+
+
+@login_required
+def product_detail(request, product_id):
+    """Vue détaillée d'un produit."""
+    product = get_object_or_404(Product, id=product_id)
+    reviews = product.reviews.all().order_by('-created_at')
+    
+    from django.db.models import Avg
+    avg_rating = reviews.aggregate(Avg('rating'))['rating__avg'] or 5
+    
+    in_wishlist = Wishlist.objects.filter(user=request.user, product=product).exists()
+    
+    context = {
+        'product': product,
+        'reviews': reviews,
+        'avg_rating': int(avg_rating),
+        'in_wishlist': in_wishlist
+    }
+    return render(request, 'client/products/detail.html', context)
+
+
+@login_required
+def live_search(request):
+    """Endpoint JSON pour la recherche live dans la navbar."""
+    q = request.GET.get('q', '').strip()
+    results = []
+    if q:
+        from django.urls import reverse
+        products = Product.objects.filter(
+            Q(pro_name__icontains=q) | Q(pro_desc__icontains=q)
+        ).annotate(avg_rating=Avg('reviews__rating'))[:6]
+        for p in products:
+            results.append({
+                'name': p.pro_name,
+                'price': str(p.pro_price),
+                'image': p.photo.url if p.photo else None,
+                'url': reverse('shop:product_detail', args=[p.id]),
+            })
+    return JsonResponse({'results': results})
+
+
+@login_required
+def cart_count(request):
+    """Retourne le nombre d'articles dans le panier (pour init du badge)."""
+    count = CartItem.objects.filter(user=request.user).count()
+    return JsonResponse({'count': count})
+
+
+@login_required
+def toggle_wishlist(request, product_id):
+    product = get_object_or_404(Product, id=product_id)
+    wish_item, created = Wishlist.objects.get_or_create(user=request.user, product=product)
+    
+    if not created:
+        wish_item.delete()
+        action = 'removed'
+        msg = f"« {product.pro_name} » retiré de votre liste de souhaits."
+    else:
+        action = 'added'
+        msg = f"« {product.pro_name} » ajouté à votre liste de souhaits."
+        
+    return JsonResponse({'status': 'success', 'action': action, 'message': msg})
+
+@login_required
+def add_review(request, product_id):
+    if request.method == 'POST':
+        product = get_object_or_404(Product, id=product_id)
+        rating = request.POST.get('rating', 5)
+        comment = request.POST.get('comment', '')
+        
+        Review.objects.create(
+            user=request.user,
+            product=product,
+            rating=rating,
+            comment=comment
+        )
+        messages.success(request, "Merci pour votre avis !")
+        return redirect('shop:product_list_client')
+
+@login_required
+def apply_coupon(request):
+    if request.method == 'POST':
+        import json
+        data = json.loads(request.body)
+        code = data.get('code', '')
+        
+        from django.utils import timezone
+        coupon = Coupon.objects.filter(
+            code__iexact=code, 
+            active=True,
+            valid_from__lte=timezone.now(),
+            valid_to__gte=timezone.now()
+        ).first()
+        
+        if coupon:
+            items = CartItem.objects.filter(user=request.user)
+            subtotal = sum(item.total_price() for item in items)
+            
+            if coupon.discount_type == 'percent':
+                discount = (subtotal * coupon.discount_percent) / 100
+                label = f"{coupon.discount_percent}%"
+            else:
+                discount = coupon.discount_amount
+                label = f"{coupon.discount_amount} FCFA"
+                
+            new_total = max(0, subtotal - discount)
+            
+            return JsonResponse({
+                'success': True, 
+                'discount_percent': coupon.discount_percent if coupon.discount_type == 'percent' else 0,
+                'discount_amount': float(discount),
+                'new_total': float(new_total),
+                'message': f"Coupon '{code}' appliqué (-{label})"
+            })
+        else:
+            return JsonResponse({'success': False, 'message': "Coupon invalide ou expiré."})
+
 
 
 @login_required
@@ -276,7 +456,8 @@ def add_to_cart(request, product_id):
         status = 'success'
 
     if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-        return JsonResponse({'status': status, 'message': msg})
+        cart_count = CartItem.objects.filter(user=request.user).count()
+        return JsonResponse({'status': status, 'message': msg, 'cart_count': cart_count})
 
     if status == 'info':
         messages.info(request, msg)
@@ -331,9 +512,34 @@ def confirm_order(request):
             messages.error(request, "Votre panier est vide.")
             return redirect('shop:product_list_client')
 
-        total = sum(item.total_price() for item in cart_items)
+        subtotal = sum(item.total_price() for item in cart_items)
+        discount_amount = 0
+        coupon_code = request.POST.get('coupon_applied', '').strip()
 
-        order = Order.objects.create(user=request.user, total=total)
+        if coupon_code:
+            from django.utils import timezone
+            from .models import Coupon
+            coupon = Coupon.objects.filter(
+                code__iexact=coupon_code,
+                active=True,
+                valid_from__lte=timezone.now(),
+                valid_to__gte=timezone.now()
+            ).first()
+            if coupon:
+                if coupon.discount_type == 'percent':
+                    discount_amount = (subtotal * coupon.discount_percent) / 100
+                else:
+                    discount_amount = coupon.discount_amount
+        
+        final_total = subtotal - discount_amount
+
+        order = Order.objects.create(
+            user=request.user, 
+            total=final_total,
+            discount_amount=discount_amount,
+            coupon_code=coupon_code,
+            status='pending'
+        )
 
         for item in cart_items:
             OrderItem.objects.create(
@@ -344,10 +550,11 @@ def confirm_order(request):
             )
 
         cart_items.delete()
-        messages.success(request, "Commande confirmée avec succès.")
+        messages.success(request, f"Commande confirmée avec succès. {'(Réduction appliquée)' if discount_amount > 0 else ''}")
         return redirect('shop:invoice', order_id=order.id)
 
     return redirect('shop:view_cart')
+
 
 
 @login_required
@@ -369,7 +576,11 @@ def download_invoice_html(request, order_id):
 
 @login_required
 def download_invoice_pdf(request, order_id):
-    order = get_object_or_404(Order, id=order_id, user=request.user)
+    if is_admin(request.user):
+        order = get_object_or_404(Order, id=order_id)
+    else:
+        order = get_object_or_404(Order, id=order_id, user=request.user)
+
     
     # Chemin système pur pour xhtml2pdf
     logo_path = os.path.join(settings.BASE_DIR, 'static', 'photos', 'logo.png')
@@ -457,6 +668,14 @@ def admin_invoice_detail(request, order_id):
     return render(request, 'client/cart/invoice.html', {'order': order, 'is_admin_view': True})
 
 
+# Vues pour les erreurs personnalisées
+def error_404(request, exception):
+    return render(request, '404.html', status=404)
+
+def error_500(request):
+    return render(request, '500.html', status=500)
+
+
 # ============================================================
 # ADMIN - Gestion des stocks
 # ============================================================
@@ -508,3 +727,113 @@ def admin_stock(request):
         'low_stock_count': low_stock_count,
         'out_stock_count': out_stock_count,
     })
+
+# Vues pour les erreurs personnalisées
+def error_404(request, exception):
+    return render(request, '404.html', status=404)
+
+def error_500(request):
+    return render(request, '500.html', status=500)
+
+def error_403(request, exception):
+    return render(request, '403.html', status=403)
+
+
+def verify_otp(request, user_id):
+    user = get_object_or_404(User, id=user_id)
+    if user.is_active:
+        return redirect('shop:login')
+
+    if request.method == 'POST':
+        code = request.POST.get('code')
+        otp = UserOTP.objects.filter(user=user, code=code).first()
+
+        if otp and otp.is_valid():
+            user.is_active = True
+            user.save()
+            otp.delete()
+            messages.success(request, 'Votre compte est maintenant activé ! Connectez-vous.')
+            return redirect('shop:login')
+        else:
+            messages.error(request, 'Code invalide ou expiré.')
+
+    return render(request, 'client/authentification/verify_otp.html', {'user_obj': user})
+
+def resend_otp(request, user_id):
+    """Envoie à nouveau le code OTP."""
+    user = get_object_or_404(User, id=user_id)
+    if user.is_active:
+        return redirect('shop:login')
+        
+    otp_code = str(random.randint(100000, 999999))
+    UserOTP.objects.update_or_create(
+        user=user,
+        defaults={'code': otp_code, 'created_at': timezone.now()}
+    )
+    
+    subject = "Nouveau code de confirmation - DomShop"
+    message = f"Bonjour {user.firstname},\n\nVoici votre nouveau code de validation : {otp_code}\n\nCe code est valable 10 minutes."
+    
+    try:
+        send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [user.email])
+        messages.success(request, "Un nouveau code a été envoyé !")
+    except Exception as e:
+        messages.error(request, "Échec de l'envoi de l'email. Vérifiez votre configuration.")
+        
+    return redirect('shop:verify_otp', user_id=user.id)
+
+@user_passes_test(is_admin, login_url='shop:login')
+def user_manage(request):
+    query = request.GET.get('q', '')
+    users = User.objects.all().order_by('-created_at')
+    if query:
+        users = users.filter(Q(email__icontains=query) | Q(firstname__icontains=query) | Q(lastname__icontains=query))
+    return render(request, 'admin/users/manage.html', {'users': users, 'query': query})
+
+@user_passes_test(is_admin, login_url='shop:login')
+def ban_user(request, user_id):
+    user = get_object_or_404(User, id=user_id)
+    if not user.is_superuser:
+        user.is_banned = True
+        user.save()
+        messages.success(request, f'Utilisateur {user.email} banni.')
+    return redirect('shop:user_manage')
+
+@user_passes_test(is_admin, login_url='shop:login')
+def unban_user(request, user_id):
+    user = get_object_or_404(User, id=user_id)
+    user.is_banned = False
+    user.save()
+    messages.success(request, f'Utilisateur {user.email} réactivé.')
+    return redirect('shop:user_manage')
+
+@user_passes_test(is_admin, login_url='shop:login')
+def coupon_manage(request):
+    """Gestion des codes promos par l'admin."""
+    coupons = Coupon.objects.all().order_by('-valid_to')
+    form = CouponForm()
+    
+    if request.method == 'POST':
+        if 'delete_id' in request.POST:
+            coupon = get_object_or_404(Coupon, id=request.POST['delete_id'])
+            coupon.delete()
+            messages.success(request, "Code promo supprimé.")
+            return redirect('shop:coupon_manage')
+            
+        coupon_id = request.POST.get('coupon_id')
+        if coupon_id:
+            coupon = get_object_or_404(Coupon, id=coupon_id)
+            form = CouponForm(request.POST, instance=coupon)
+        else:
+            form = CouponForm(request.POST)
+            
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Code promo enregistré !")
+            return redirect('shop:coupon_manage')
+            
+    return render(request, 'admin/coupons/manage.html', {
+        'coupons': coupons,
+        'form': form,
+    })
+

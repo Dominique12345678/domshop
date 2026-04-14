@@ -30,6 +30,24 @@ urlpatterns = [
     path('admin/invoices/', views.admin_invoices, name='admin_invoices'),
     path('admin/invoices/<int:order_id>/', views.admin_invoice_detail, name='admin_invoice_detail'),
     path('admin/stock/', views.admin_stock, name='admin_stock'),
+    path('admin/users/', views.user_manage, name='user_manage'),
+    path('admin/users/ban/<int:user_id>/', views.ban_user, name='ban_user'),
+    path('admin/users/unban/<int:user_id>/', views.unban_user, name='unban_user'),
+
+    # Nouvelles fonctionnalités
+    path('verify-otp/<int:user_id>/', views.verify_otp, name='verify_otp'),
+    path('resend-otp/<int:user_id>/', views.resend_otp, name='resend_otp'),
+    path('wishlist/toggle/<int:product_id>/', views.toggle_wishlist, name='toggle_wishlist'),
+
+    path('review/add/<int:product_id>/', views.add_review, name='add_review'),
+    path('coupon/apply/', views.apply_coupon, name='apply_coupon'),
+
+    path('produits/<int:product_id>/', views.product_detail, name='product_detail'),
+    path('admin/coupons/', views.coupon_manage, name='coupon_manage'),
+
+    # Search & Cart API
+    path('api/search/', views.live_search, name='live_search'),
+    path('api/cart-count/', views.cart_count, name='cart_count'),
 ]
 
 

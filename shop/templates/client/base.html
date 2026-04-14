@@ -6,115 +6,182 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}DomShop | Votre boutique en ligne{% endblock %}</title>
     
-    <!-- Styles externes -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="icon" type="image/png" href="{% static 'photos/logo.png' %}">
     
-    <!-- Styles personnalisés -->
     <style>
         :root {
             --primary-color: #14599e;
-            --secondary-color: #ffffff;
-            --accent-color: #f76d34;
+            --accent-color:  #f76d34;
+            --bg-color:      #f8f9fa;
+            --card-bg:       #ffffff;
+            --text-color:    #212529;
+            --nav-bg:        #14599e;
+            --search-bg:     rgba(255,255,255,0.12);
+            --search-focus:  rgba(255,255,255,0.22);
+        }
+        [data-bs-theme="dark"] {
+            --bg-color:   #0d1117;
+            --card-bg:    #161b22;
+            --text-color: #c9d1d9;
+            --nav-bg:     #161b22;
+            --search-bg:  rgba(255,255,255,0.07);
+            --search-focus: rgba(255,255,255,0.13);
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--secondary-color);
-            color: #333333;
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
             display: flex;
-
             flex-direction: column;
             min-height: 100vh;
+            transition: background-color 0.3s, color 0.3s;
         }
 
+        /* ---- NAVBAR ---- */
         .navbar {
-            transition: all 0.3s ease;
+            background-color: var(--nav-bg) !important;
+            padding: 0.75rem 0;
+            transition: background 0.4s, backdrop-filter 0.4s;
         }
-
-        .navbar.scrolled {
-            background-color: var(--primary-color) !important;
-            padding-top: 5px;
-            padding-bottom: 5px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-
-        .navbar-brand {
-            font-weight: 700;
-            font-size: 1.5rem;
-            color: white !important;
-        }
-
         .nav-link {
             font-weight: 500;
+            color: rgba(255,255,255,0.85) !important;
+            transition: color 0.2s;
+        }
+        .nav-link:hover { color: white !important; }
+
+        /* ---- SEARCH BAR ---- */
+        .nav-search-wrap {
             position: relative;
-            margin: 0 10px;
         }
-
-        .nav-link::after {
-            content: '';
-            position: absolute;
-            width: 0;
-            height: 2px;
-            bottom: 0;
-            left: 0;
-            background-color: var(--primary-color);
-            transition: width 0.3s ease;
+        .nav-search-input {
+            background: var(--search-bg);
+            border: 1.5px solid transparent;
+            border-radius: 50px;
+            color: white;
+            padding: 7px 40px 7px 16px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.88rem;
+            width: 220px;
+            transition: width 0.35s ease, background 0.2s, border-color 0.2s;
         }
-
-        .nav-link:hover::after {
-            width: 100%;
-        }
-
-        main {
-            flex: 1;
-            padding-top: 6rem;
-            padding-bottom: 2rem;
-        }
-
-        footer {
-            background-color: var(--primary-color);
-            padding: 2rem 0;
+        .nav-search-input::placeholder { color: rgba(255,255,255,0.55); }
+        .nav-search-input:focus {
+            outline: none;
+            width: 310px;
+            background: var(--search-focus);
+            border-color: rgba(255,255,255,0.35);
             color: white;
         }
-
-        .btn-primary {
-            background-color: var(--primary-color);
-            border-color: var(--primary-color);
-            transition: all 0.3s ease;
+        .nav-search-icon {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: rgba(255,255,255,0.55);
+            pointer-events: none;
+            font-size: 0.8rem;
         }
 
-        .btn-primary:hover {
-            background-color: var(--accent-color);
-            border-color: var(--accent-color);
-            transform: translateY(-2px);
-        }
-
-        .card {
-            border: none;
-            border-radius: 10px;
+        /* ---- LIVE DROPDOWN ---- */
+        .search-dropdown {
+            display: none;
+            position: absolute;
+            top: calc(100% + 8px);
+            left: 0;
+            width: 360px;
+            background: var(--card-bg);
+            border-radius: 18px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.18);
+            z-index: 9999;
             overflow: hidden;
-            transition: transform 0.3s, box-shadow 0.3s;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(0,0,0,0.07);
+        }
+        .search-dropdown.open { display: block; }
+        .search-result-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 16px;
+            cursor: pointer;
+            transition: background 0.15s;
+            border-bottom: 1px solid rgba(0,0,0,0.04);
+            text-decoration: none;
+            color: var(--text-color);
+        }
+        .search-result-item:hover { background: rgba(20,89,158,0.06); }
+        .search-result-img {
+            width: 48px;
+            height: 48px;
+            object-fit: cover;
+            border-radius: 10px;
+            background: rgba(0,0,0,0.05);
+            flex-shrink: 0;
+        }
+        .search-result-name { font-weight: 600; font-size: 0.9rem; }
+        .search-result-price { font-size: 0.8rem; color: var(--accent-color); font-weight: 600; }
+        .search-no-result { padding: 20px; text-align: center; color: #999; font-size: 0.9rem; }
+        .search-footer-link {
+            display: block;
+            text-align: center;
+            padding: 10px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--primary-color);
+            text-decoration: none;
+            background: rgba(20,89,158,0.04);
+        }
+        .search-footer-link:hover { background: rgba(20,89,158,0.1); }
+
+        /* ---- THEME & CART BUTTONS ---- */
+        .btn-theme {
+            background: rgba(255,255,255,0.12);
+            border: none;
+            color: white;
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+        .btn-theme:hover { background: rgba(255,255,255,0.22); }
+        .btn-accent {
+            background-color: var(--accent-color);
+            border: none;
+            transition: transform 0.2s, opacity 0.2s;
+        }
+        .btn-accent:hover { transform: scale(1.05); color: white; opacity: 0.9; }
+
+        /* Cart counter */
+        #cart-counter {
+            background: var(--accent-color);
+            font-size: 0.6rem;
+            font-weight: 700;
+            width: 18px;
+            height: 18px;
+            display: none;
         }
 
-        .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+        /* ---- CARDS ---- */
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 24px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.04);
+            border: 1px solid rgba(0,0,0,0.05);
+            transition: transform 0.3s ease;
         }
+        .card:hover { transform: translateY(-6px); }
+        [data-bs-theme="dark"] .card { border: 1px solid rgba(255,255,255,0.05); }
 
-        .pulse {
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
-        }
+        main { flex: 1; padding-top: 7rem; padding-bottom: 2rem; }
+        footer { background: var(--nav-bg); padding: 4rem 0; margin-top: auto; color: white; }
     </style>
 
     {% block extra_css %}{% endblock %}
@@ -122,115 +189,245 @@
 <body>
 
     <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark fixed-top" style="background-color: var(--primary-color);">
+    <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
         <div class="container">
-            <a class="navbar-brand animate__animated animate__fadeInLeft" href="{% url 'shop:home' %}">
-                <img src="{% static 'photos/logo.png' %}" alt="Logo" style="height: 65px; object-fit: contain;">
+            <a class="navbar-brand" href="{% url 'shop:home' %}">
+                <img src="{% static 'photos/logo.png' %}" alt="Logo" style="height: 55px; object-fit: contain;">
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
-            <div class="collapse navbar-collapse animate__animated animate__fadeInDown" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+
+                <!-- ===== LIVE SEARCH ===== -->
+                {% if user.is_authenticated %}
+                <div class="ms-3 me-auto nav-search-wrap" id="navSearchWrap">
+                    <input type="text" id="navSearchInput" class="nav-search-input"
+                           placeholder="Rechercher un produit..."
+                           autocomplete="off">
+                    <i class="fas fa-search nav-search-icon"></i>
+
+                    <div class="search-dropdown" id="searchDropdown">
+                        <div id="searchResults"></div>
+                    </div>
+                </div>
+                {% endif %}
+                <!-- ======================== -->
+
+                <ul class="navbar-nav ms-auto align-items-center">
+                    <li class="nav-item me-2">
+                        <button class="btn-theme" id="theme-toggle" title="Changer de thème">
+                            <i class="fas fa-moon"></i>
+                        </button>
+                    </li>
                     {% if user.is_authenticated %}
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'shop:product_list_client' %}">
-                                <i class="fas fa-boxes me-1"></i> Produits
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'shop:client_dashboard' %}">
-                                <i class="fas fa-chart-line me-1"></i> Tableau de bord
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'shop:logout' %}">
-                                <i class="fas fa-sign-out-alt me-1"></i> Déconnexion
-                            </a>
-                        </li>
+                    <li class="nav-item">
+                        <a class="nav-link position-relative" href="{% url 'shop:view_cart' %}">
+                            <i class="fas fa-shopping-basket me-1"></i> Panier
+                            <span id="cart-counter" class="badge rounded-circle position-absolute top-0 start-100 translate-middle d-flex align-items-center justify-content-center">0</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'shop:product_list_client' %}">Produits</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'shop:client_dashboard' %}">Tableau de bord</a>
+                    </li>
+                    {% if user.is_staff or user.role.role_name == 'admin' %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle text-warning" href="#" id="adminDropdown" data-bs-toggle="dropdown">Admin</a>
+                        <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 rounded-4">
+                            <li><a class="dropdown-item" href="{% url 'shop:admin_dashboard' %}"><i class="fas fa-chart-line me-2"></i>Dashboard</a></li>
+                            <li><a class="dropdown-item" href="{% url 'shop:product_manage' %}"><i class="fas fa-box me-2"></i>Produits</a></li>
+                            <li><a class="dropdown-item" href="{% url 'shop:category_manage' %}"><i class="fas fa-tags me-2"></i>Catégories</a></li>
+                            <li><a class="dropdown-item" href="{% url 'shop:coupon_manage' %}"><i class="fas fa-ticket-alt me-2"></i>Codes Promo</a></li>
+                            <li><a class="dropdown-item" href="{% url 'shop:user_manage' %}"><i class="fas fa-users me-2"></i>Utilisateurs</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{% url 'shop:admin_stock' %}"><i class="fas fa-warehouse me-2"></i>Stocks</a></li>
+                        </ul>
+                    </li>
+                    {% endif %}
+                    <li class="nav-item">
+                        <a class="nav-link btn btn-accent text-white rounded-pill px-4 ms-lg-2" href="{% url 'shop:logout' %}">Quitter</a>
+                    </li>
                     {% else %}
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'shop:login' %}">
-                                <i class="fas fa-sign-in-alt me-1"></i> Connexion
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link pulse" href="{% url 'shop:register' %}">
-                                <i class="fas fa-user-plus me-1"></i> Inscription
-                            </a>
-                        </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'shop:login' %}">Connexion</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="btn btn-accent text-white rounded-pill px-4 ms-lg-2" href="{% url 'shop:register' %}">Commencer</a>
+                    </li>
                     {% endif %}
                 </ul>
             </div>
         </div>
     </nav>
 
-    <!-- Section pleine largeur (ex: vidéo d'accueil) -->
     {% block hero %}{% endblock %}
 
-    <!-- Contenu principal -->
-    <main class="container mb-5">
+    <main class="container">
         {% for message in messages %}
-        <div class="alert alert-{{ message.tags }} alert-dismissible fade show mt-3" role="alert">
-            {{ message }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show rounded-4 shadow-sm mb-4" role="alert">
+            <i class="fas fa-info-circle me-2"></i> {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
         {% endfor %}
-
         {% block content %}{% endblock %}
     </main>
 
-    <!-- Toast Container for Notifications -->
-    <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 1080">
-        <div id="liveToast" class="toast align-items-center text-white border-0" role="alert" aria-live="assertive" aria-atomic="true">
+    <!-- Toast notification -->
+    <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 9999;">
+        <div id="liveToast" class="toast align-items-center text-white border-0" role="alert">
             <div class="d-flex">
                 <div class="toast-body fw-bold" id="toastMessage"></div>
-                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
             </div>
         </div>
     </div>
 
-    <!-- Footer -->
     <footer class="text-white">
         <div class="container">
             <div class="row">
-                <div class="col-md-4 mb-3">
-                    <h5>DomShop</h5>
-                    <p>Votre boutique en ligne préférée pour des produits de qualité.</p>
+                <div class="col-md-4 mb-4">
+                    <h5 class="fw-bold mb-3">DomShop</h5>
+                    <p class="opacity-75">La technologie et le style à portée de clic.</p>
                 </div>
-                <div class="col-md-4 mb-3">
-                    <h5>Liens rapides</h5>
-                    <ul class="list-unstyled">
-                        <li><a href="{% url 'shop:home' %}" class="text-white">Accueil</a></li>
-                        <li><a href="#" class="text-white">Produits</a></li>
-                        <li><a href="#" class="text-white">Contact</a></li>
+                <div class="col-md-4 mb-4 text-center">
+                    <h5 class="fw-bold mb-3">Besoin d'aide ?</h5>
+                    <ul class="list-unstyled opacity-75">
+                        <li><a href="#" class="text-white text-decoration-none">Support 24/7</a></li>
+                        <li><a href="#" class="text-white text-decoration-none">Livraisons</a></li>
                     </ul>
                 </div>
-                <div class="col-md-4">
-                    <h5>Réseaux sociaux</h5>
-                    <a href="#" class="text-white me-3"><i class="fab fa-facebook-f"></i></a>
-                    <a href="#" class="text-white me-3"><i class="fab fa-twitter"></i></a>
-                    <a href="#" class="text-white me-3"><i class="fab fa-instagram"></i></a>
-                    <a href="#" class="text-white"><i class="fab fa-linkedin-in"></i></a>
+                <div class="col-md-4 mb-4 text-md-end">
+                    <h5 class="fw-bold mb-3">Newsletter</h5>
+                    <div class="input-group">
+                        <input type="text" class="form-control bg-transparent text-white border-white border-opacity-25" placeholder="Votre email">
+                        <button class="btn btn-accent text-white">Go</button>
+                    </div>
                 </div>
             </div>
-            <hr class="my-3 bg-light">
-            <p class="text-center">&copy; {% now "Y" %} DomShop - Tous droits réservés</p>
+            <hr class="my-4 border-white border-opacity-10">
+            <p class="text-center opacity-50 small">&copy; {% now "Y" %} DomShop. Fait avec passion.</p>
         </div>
     </footer>
 
-    <!-- JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Navbar scroll animation
-        window.addEventListener('scroll', function () {
-            const navbar = document.querySelector('.navbar');
-            if (window.scrollY > 50) {
-                navbar.classList.add('scrolled');
+        // ===== DARK MODE =====
+        const toggleBtn = document.getElementById('theme-toggle');
+        const themeIcon = toggleBtn.querySelector('i');
+        if (localStorage.getItem('theme') === 'dark') {
+            document.body.setAttribute('data-bs-theme', 'dark');
+            themeIcon.classList.replace('fa-moon', 'fa-sun');
+        }
+        toggleBtn.addEventListener('click', () => {
+            if (document.body.getAttribute('data-bs-theme') === 'dark') {
+                document.body.removeAttribute('data-bs-theme');
+                themeIcon.classList.replace('fa-sun', 'fa-moon');
+                localStorage.setItem('theme', 'light');
             } else {
-                navbar.classList.remove('scrolled');
+                document.body.setAttribute('data-bs-theme', 'dark');
+                themeIcon.classList.replace('fa-moon', 'fa-sun');
+                localStorage.setItem('theme', 'dark');
             }
         });
+
+        // ===== SCROLL NAVBAR =====
+        window.addEventListener('scroll', () => {
+            const nav = document.querySelector('.navbar');
+            if (window.scrollY > 50) {
+                nav.style.background = 'rgba(0,0,0,0.85)';
+                nav.style.backdropFilter = 'blur(16px)';
+            } else {
+                nav.style.background = '';
+                nav.style.backdropFilter = '';
+            }
+        });
+
+        // ===== CART COUNTER INIT =====
+        {% if user.is_authenticated %}
+        fetch('{% url "shop:cart_count" %}')
+            .then(r => r.json())
+            .then(d => updateCartBadge(d.count));
+        {% endif %}
+
+        function updateCartBadge(count) {
+            const badge = document.getElementById('cart-counter');
+            if (!badge) return;
+            if (count > 0) {
+                badge.innerText = count;
+                badge.style.display = 'flex';
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+
+        // ===== GLOBAL NOTIFICATION =====
+        function showToast(msg, type) {
+            const toastEl = document.getElementById('liveToast');
+            if (!toastEl) return;
+            document.getElementById('toastMessage').textContent = msg;
+            const color = type === 'success' ? '#28a745' : type === 'info' ? '#14599e' : '#dc3545';
+            toastEl.style.background = color;
+            toastEl.style.borderRadius = '14px';
+            toastEl.className = 'toast align-items-center text-white border-0 animate__animated animate__fadeInRight animate__faster';
+            new bootstrap.Toast(toastEl, { delay: 2500 }).show();
+        }
+
+        // ===== LIVE SEARCH =====
+        const navInput = document.getElementById('navSearchInput');
+        const dropdown = document.getElementById('searchDropdown');
+        const resultsBox = document.getElementById('searchResults');
+
+        if (navInput) {
+            let debounceTimer;
+
+            navInput.addEventListener('input', () => {
+                clearTimeout(debounceTimer);
+                const q = navInput.value.trim();
+                if (q.length < 2) { dropdown.classList.remove('open'); return; }
+
+                debounceTimer = setTimeout(() => {
+                    fetch(`{% url 'shop:live_search' %}?q=${encodeURIComponent(q)}`, {
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                    })
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data.results.length === 0) {
+                            resultsBox.innerHTML = '<div class="search-no-result"><i class="fas fa-search-minus me-2 opacity-50"></i>Aucun résultat.</div>';
+                        } else {
+                            resultsBox.innerHTML = data.results.map(p => `
+                                <a href="${p.url}" class="search-result-item">
+                                    ${p.image ? `<img src="${p.image}" class="search-result-img" alt="">` 
+                                               : `<div class="search-result-img d-flex align-items-center justify-content-center opacity-25"><i class="fas fa-box"></i></div>`}
+                                    <div>
+                                        <div class="search-result-name">${p.name}</div>
+                                        <div class="search-result-price">${parseInt(p.price).toLocaleString('fr')} Fcfa</div>
+                                    </div>
+                                </a>
+                            `).join('');
+                        }
+                        resultsBox.innerHTML += `<a href="{% url 'shop:product_list_client' %}?q=${encodeURIComponent(q)}" class="search-footer-link">Voir tous les résultats →</a>`;
+                        dropdown.classList.add('open');
+                    });
+                }, 280);
+            });
+
+            navInput.addEventListener('keydown', e => {
+                if (e.key === 'Enter') {
+                    window.location.href = `{% url 'shop:product_list_client' %}?q=${encodeURIComponent(navInput.value.trim())}`;
+                }
+                if (e.key === 'Escape') dropdown.classList.remove('open');
+            });
+
+            document.addEventListener('click', e => {
+                if (!document.getElementById('navSearchWrap').contains(e.target)) {
+                    dropdown.classList.remove('open');
+                }
+            });
+        }
     </script>
     {% block extra_js %}{% endblock %}
 </body>

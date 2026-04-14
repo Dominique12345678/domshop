@@ -14,6 +14,13 @@ urlpatterns = [
     path('h/', shop_views.home, name='home'), # Nom global pour Allauth
 ]
 
+# Gestion des erreurs personnalisée
+handler404 = 'shop.views.error_404'
+handler500 = 'shop.views.error_500'
+handler403 = 'shop.views.error_403'
+
+
+
 # Ajoute ceci pour servir les fichiers médias quand DEBUG = True
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

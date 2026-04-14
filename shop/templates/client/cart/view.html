@@ -6,155 +6,207 @@
 <!-- SweetAlert2 -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
 <style>
-    .swal2-popup {
-        border-radius: 20px !important;
-        font-family: 'Poppins', sans-serif;
-    }
-    .btn-confirm-delete {
-        background-color: var(--accent-color) !important;
-        border-radius: 10px !important;
-    }
-    .btn-cancel-delete {
-        border-radius: 10px !important;
-    }
+    .swal2-popup { border-radius: 20px !important; font-family: 'Outfit', sans-serif; }
+    .cart-card { border-radius: 30px; border: none; }
+    .quantity-input { width: 80px; border-radius: 12px; text-align: center; font-weight: bold; }
+    .coupon-section { background: rgba(0,0,0,0.02); border-radius: 20px; padding: 20px; }
+    [data-bs-theme="dark"] .coupon-section { background: rgba(255,255,255,0.05); }
 </style>
 {% endblock %}
 
 {% block content %}
-
-<!-- Meta CSRF pour JS -->
 <meta name="csrf-token" content="{{ csrf_token }}">
 
 <div class="container py-5">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="fw-bold"><i class="fas fa-shopping-cart me-2 text-primary"></i>Mon Panier</h2>
-        <span class="badge bg-primary rounded-pill px-3 py-2">{{ items|length }} Article(s)</span>
-    </div>
+    <div class="row g-4">
+        <!-- Liste des articles -->
+        <div class="col-lg-8">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="fw-bold"><i class="fas fa-shopping-basket me-2 text-primary"></i>Votre Panier</h2>
+                <span class="badge bg-primary rounded-pill px-3 py-2">{{ items|length }} Article(s)</span>
+            </div>
 
-    <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
-        <div class="card-body p-0">
-            <table id="cart-table" class="table table-hover align-middle mb-0">
-    <thead>
-        <tr>
-            <th>Produit</th>
-            <th style="width: 150px;">Quantité</th>
-            <th>Prix</th>
-            <th>Total</th>
-            <th class="text-center">Action</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for item in items %}
-        <tr data-item-id="{{ item.id }}">
-            <td>{{ item.product.pro_name }}</td>
-            <td>
-                <input type="number"
-                       class="quantity-input form-control"
-                       value="{{ item.quantity }}"
-                       min="1"
-                       data-update-url="{% url 'shop:update_cart' item.id %}">
-            </td>
-            <td class="unit-price" data-price="{{ item.product.pro_price }}">
-                {{ item.product.pro_price|intcomma }} Fcfa
-            </td>
-            <td class="item-total">
-                {{ item.total_price|intcomma }} Fcfa
-            </td>
-            <td class="text-center">
-                <a href="#" 
-                   class="btn btn-sm btn-outline-danger rounded-pill px-3 delete-item" 
-                   data-url="{% url 'shop:remove_from_cart' item.id %}"
-                   data-name="{{ item.product.pro_name }}">
-                    <i class="fas fa-trash-alt me-1"></i> Retirer
-                </a>
-            </td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
-
-    <div class="row align-items-center bg-white p-4 rounded-4 shadow-sm">
-        <div class="col-md-6 mb-3 mb-md-0">
-            <h4 class="mb-0">Total de votre commande: <span class="fw-bold text-primary" id="total-amount">{{ total|intcomma }}</span> <span class="small text-muted">Fcfa</span></h4>
+            <div class="card cart-card shadow-sm overflow-hidden">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="bg-light">
+                            <tr>
+                                <th class="ps-4">Produit</th>
+                                <th>Prix</th>
+                                <th>Quantité</th>
+                                <th>Total</th>
+                                <th class="text-center">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in items %}
+                            <tr data-item-id="{{ item.id }}">
+                                <td class="ps-4">
+                                    <div class="d-flex align-items-center">
+                                        {% if item.product.photo %}
+                                            <img src="{{ item.product.photo.url }}" class="rounded-3 me-3" style="width: 50px; height: 50px; object-fit: cover;">
+                                        {% endif %}
+                                        <span class="fw-bold">{{ item.product.pro_name }}</span>
+                                    </div>
+                                </td>
+                                <td class="unit-price" data-price="{{ item.product.pro_price }}">
+                                    {{ item.product.pro_price|intcomma }} <small>Fcfa</small>
+                                </td>
+                                <td>
+                                    <input type="number" class="quantity-input form-control bg-light border-0" 
+                                           value="{{ item.quantity }}" min="1"
+                                           data-update-url="{% url 'shop:update_cart' item.id %}">
+                                </td>
+                                <td class="item-total fw-bold text-primary">
+                                    {{ item.total_price|intcomma }} <small>Fcfa</small>
+                                </td>
+                                <td class="text-center">
+                                    <button class="btn btn-sm btn-outline-danger border-0 rounded-circle delete-item" 
+                                            data-url="{% url 'shop:remove_from_cart' item.id %}"
+                                            data-name="{{ item.product.pro_name }}">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center py-5">
+                                    <div class="opacity-25 mb-3"><i class="fas fa-shopping-basket fa-4x"></i></div>
+                                    <p class="text-muted">Votre panier est vide.</p>
+                                    <a href="{% url 'shop:product_list_client' %}" class="btn btn-primary rounded-pill">Découvrir les produits</a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
-        <div class="col-md-6 text-md-end">
-            <a href="{% url 'shop:product_list_client' %}" class="btn btn-link text-muted text-decoration-none me-3">Continuer mes achats</a>
-            <form method="post" action="{% url 'shop:confirm_order' %}" class="d-inline">
-                {% csrf_token %}
-                <button type="submit" class="btn btn-primary btn-lg rounded-pill px-5 shadow-sm">
-                    Commander <i class="fas fa-arrow-right ms-2"></i>
-                </button>
-            </form>
+
+        <!-- Récapitulatif et Coupon -->
+        <div class="col-lg-4">
+            <div class="card cart-card shadow-sm p-4 h-100">
+                <h5 class="fw-bold mb-4">Récapitulatif</h5>
+                
+                <div class="coupon-section mb-4">
+                    <label class="form-label small fw-bold text-muted">CODE PROMO</label>
+                    <div class="input-group">
+                        <input type="text" id="couponCode" class="form-control border-0 bg-white rounded-start-pill px-3" placeholder="Entrez votre code">
+                        <button id="applyCouponBtn" class="btn btn-primary rounded-end-pill px-3">Appliquer</button>
+                    </div>
+                    <div id="couponMessage" class="small mt-2"></div>
+                </div>
+
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-muted">Sous-total</span>
+                    <span id="subtotal">{{ total|intcomma }} Fcfa</span>
+                </div>
+                <div class="d-flex justify-content-between mb-2 text-success d-none" id="discountRow">
+                    <span class="small fw-bold">Réduction (<span id="discountPercent">0</span>%)</span>
+                    <span id="discountAmount">-0 Fcfa</span>
+                </div>
+                <hr>
+                <div class="d-flex justify-content-between mb-4">
+                    <span class="h5 fw-bold">Total</span>
+                    <span class="h5 fw-bold text-primary" id="total-amount">{{ total|intcomma }} Fcfa</span>
+                </div>
+
+                <form method="post" action="{% url 'shop:confirm_order' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="coupon_applied" id="couponAppliedInput" value="">
+                    <button type="submit" class="btn btn-primary w-100 btn-lg rounded-pill shadow-sm py-3 fw-bold">
+                        Payer Maintenant <i class="fas fa-arrow-right ms-2 text-accent"></i>
+                    </button>
+                </form>
+                
+                <div class="text-center mt-3">
+                    <a href="{% url 'shop:product_list_client' %}" class="text-muted small text-decoration-none">
+                        <i class="fas fa-chevron-left me-1"></i> Continuer mes achats
+                    </a>
+                </div>
+            </div>
         </div>
     </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
-<!-- SweetAlert2 -->
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
 <script>
 document.addEventListener("DOMContentLoaded", function () {
     const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute("content");
 
-    // Gestion de la suppression avec SweetAlert2
+    // Suppression
     document.querySelectorAll(".delete-item").forEach(button => {
         button.addEventListener("click", function (e) {
             e.preventDefault();
-            const url = this.dataset.url;
-            const productName = this.dataset.name;
-
             Swal.fire({
-                title: 'Retirer du panier ?',
-                text: `Souhaitez-vous vraiment retirer "${productName}" de votre panier ?`,
+                title: 'Retirer cet article ?',
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#14599e',
-                cancelButtonColor: '#6c757d',
+                cancelButtonColor: '#d33',
                 confirmButtonText: 'Oui, retirer',
                 cancelButtonText: 'Annuler',
-                reverseButtons: true,
-                customClass: {
-                    confirmButton: 'btn btn-primary px-4 fw-bold',
-                    cancelButton: 'btn btn-light px-4 me-3'
-                },
-                buttonsStyling: false
+                borderRadius: '20px'
             }).then((result) => {
-                if (result.isConfirmed) {
-                    window.location.href = url;
+                if (result.isConfirmed) window.location.href = this.dataset.url;
+            });
+        });
+    });
+
+    // Mise à jour quantités
+    document.querySelectorAll(".quantity-input").forEach(input => {
+        input.addEventListener("change", function () {
+            const quantity = parseInt(this.value);
+            if (quantity < 1) return;
+            const url = this.dataset.updateUrl;
+            const unitPrice = parseInt(this.closest("tr").querySelector(".unit-price").dataset.price);
+
+            fetch(url, {
+                method: "POST",
+                headers: { "Content-Type": "application/json", "X-CSRFToken": csrfToken },
+                body: JSON.stringify({ quantity: quantity })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    this.closest("tr").querySelector(".item-total").innerHTML = (quantity * unitPrice).toLocaleString() + " <small>Fcfa</small>";
+                    document.getElementById("total-amount").innerText = data.cart_total.toLocaleString() + " Fcfa";
+                    document.getElementById("subtotal").innerText = data.cart_total.toLocaleString() + " Fcfa";
                 }
             });
         });
     });
 
-    // Gestion de la mise à jour des quantités (existant)
-    document.querySelectorAll(".quantity-input").forEach(input => {
-        input.addEventListener("change", function () {
-            const quantity = parseInt(this.value);
-            if (quantity < 1) return;
+    // Coupons
+    const applyBtn = document.getElementById('applyCouponBtn');
+    applyBtn.addEventListener('click', function() {
+        const code = document.getElementById('couponCode').value;
+        if (!code) return;
 
-            const url = this.dataset.updateUrl;
-            const row = this.closest("tr");
-            const unitPrice = parseInt(row.querySelector(".unit-price").dataset.price);
-
-            fetch(url, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "X-CSRFToken": csrfToken,
-                },
-                body: JSON.stringify({ quantity: quantity })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    const lineTotal = quantity * unitPrice;
-                    row.querySelector(".item-total").innerText = lineTotal.toLocaleString() + " Fcfa";
-                    document.getElementById("total-amount").innerText = data.cart_total.toLocaleString() + " Fcfa";
-                }
-            })
-            .catch(error => console.error("Erreur AJAX :", error));
+        fetch("{% url 'shop:apply_coupon' %}", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "X-CSRFToken": csrfToken },
+            body: JSON.stringify({ code: code })
+        })
+        .then(res => res.json())
+        .then(data => {
+            const msgEl = document.getElementById('couponMessage');
+            if (data.success) {
+                msgEl.className = "small mt-2 text-success fw-bold";
+                msgEl.innerText = data.message;
+                
+                document.getElementById('discountRow').classList.remove('d-none');
+                document.getElementById('discountPercent').innerText = data.discount_percent;
+                document.getElementById('discountAmount').innerText = "-" + data.discount_amount.toLocaleString() + " Fcfa";
+                document.getElementById('total-amount').innerText = data.new_total.toLocaleString() + " Fcfa";
+                document.getElementById('couponAppliedInput').value = code;
+                applyBtn.disabled = true;
+            } else {
+                msgEl.className = "small mt-2 text-danger";
+                msgEl.innerText = data.message;
+            }
         });
     });
 });

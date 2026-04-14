@@ -17,6 +17,18 @@
             --dark-color: #1a1a2e;
             --border-color: #e0e0e0;
             --error-color: #e63946;
+            --success-color: #2dc653;
+            --bg-gradient: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            --card-bg: rgba(255, 255, 255, 0.9);
+            --text-color: #333;
+        }
+
+        [data-bs-theme="dark"] {
+            --bg-gradient: linear-gradient(135deg, #0d1117 0%, #161b22 100%);
+            --card-bg: rgba(22, 27, 34, 0.95);
+            --text-color: #c9d1d9;
+            --dark-color: #c9d1d9;
+            --light-color: #0d1117;
         }
 
         * {
@@ -27,20 +39,22 @@
 
         body {
             font-family: 'Poppins', sans-serif;
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            background: var(--bg-gradient);
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
             padding: 20px;
+            color: var(--text-color);
+            transition: 0.3s;
         }
 
         .register-container {
-            background: rgba(255, 255, 255, 0.9);
+            background: var(--card-bg);
             backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 20px;
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
             width: 100%;
             max-width: 550px;
             padding: 40px;
@@ -82,14 +96,49 @@
             font-size: 14px;
         }
 
+        .alert {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 12px 16px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 500;
+            margin-bottom: 18px;
+            animation: slideDown 0.35s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-8px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .alert-danger {
+            background: rgba(230, 57, 70, 0.12);
+            color: #e63946;
+            border-left: 4px solid #e63946;
+        }
+
+        .alert-success {
+            background: rgba(45, 198, 83, 0.12);
+            color: #1a7d35;
+            border-left: 4px solid #2dc653;
+        }
+
         .register-form .form-row {
             display: flex;
             gap: 15px;
-            margin-bottom: 20px;
         }
 
         .register-form .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 18px;
             position: relative;
             flex: 1;
         }
@@ -98,10 +147,8 @@
             display: block;
             margin-bottom: 8px;
             font-weight: 600;
-            color: var(--dark-color);
-            font-size: 13px;
+            font-size: 12px;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
         }
 
         .register-form input {
@@ -119,20 +166,14 @@
             border-color: var(--primary-color);
             background-color: #fff;
             outline: none;
-            box-shadow: 0 5px 15px rgba(20, 89, 158, 0.1);
         }
 
         .register-form .input-icon {
             position: absolute;
             left: 15px;
-            top: 38px;
+            top: 35px;
             color: #999;
             font-size: 14px;
-            transition: all 0.3s;
-        }
-
-        .register-form input:focus+.input-icon {
-            color: var(--primary-color);
         }
 
         .btn-submit {
@@ -147,20 +188,18 @@
             cursor: pointer;
             transition: all 0.3s;
             margin-top: 10px;
-            box-shadow: 0 4px 12px rgba(20, 89, 158, 0.2);
         }
 
         .btn-submit:hover {
-            background-color: #0d4a85;
             transform: translateY(-2px);
-            box-shadow: 0 6px 15px rgba(20, 89, 158, 0.3);
+            box-shadow: 0 4px 12px rgba(20, 89, 158, 0.2);
         }
 
         .divider {
             display: flex;
             align-items: center;
             text-align: center;
-            margin: 25px 0;
+            margin: 20px 0;
             color: #999;
         }
 
@@ -172,73 +211,44 @@
         }
 
         .divider span {
-            padding: 0 15px;
+            padding: 0 10px;
             font-size: 11px;
             text-transform: uppercase;
-            font-weight: 600;
         }
 
         .btn-google {
             width: 100%;
             padding: 12px;
-            background-color: white;
-            color: #555;
             border: 1px solid #ddd;
             border-radius: 10px;
-            font-size: 14px;
+            background: #fff;
             font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 12px;
+            gap: 10px;
             text-decoration: none;
+            color: #555;
         }
 
-        .btn-google:hover {
-            background-color: #f8f9fa;
-            border-color: #ccc;
-        }
-
-        .btn-google img {
-            width: 24px;
-            height: 24px;
-            object-fit: contain;
-        }
-
-        .register-footer {
+        .footer-link {
             text-align: center;
-            margin-top: 25px;
+            margin-top: 20px;
             font-size: 14px;
-            color: #666;
         }
 
-        .register-footer a {
+        .footer-link a {
             color: var(--secondary-color);
-            text-decoration: none;
             font-weight: 600;
+            text-decoration: none;
         }
 
         .errorlist {
             list-style: none;
             color: var(--error-color);
             font-size: 12px;
-            margin-bottom: 15px;
-            padding: 10px;
-            background: rgba(230, 57, 70, 0.1);
-            border-radius: 8px;
-        }
-
-        @media (max-width: 580px) {
-            .register-form .form-row {
-                flex-direction: column;
-                gap: 0;
-            }
-
-            .register-container {
-                padding: 30px 20px;
-            }
+            padding: 0;
+            margin-top: 5px;
         }
     </style>
 </head>
@@ -247,74 +257,74 @@
     <div class="register-container">
         <div class="register-header">
             <img src="{% static 'photos/logo.png' %}" alt="DomShop Logo" class="brand-logo">
-            <h1>Créer un compte</h1>
-            <p>Rejoignez la communauté DomShop</p>
+            <h1>Inscription</h1>
+            <p>Créez votre compte DomShop en quelques secondes</p>
         </div>
 
-        {% if form.errors %}
-        <div class="errorlist">
-            {{ form.non_field_errors }}
-            Une erreur est survenue lors de l'inscription. Veuillez vérifier les champs.
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">
+            <i class="fas fa-info-circle"></i> {{ message }}
         </div>
-        {% endif %}
+        {% endfor %}
 
         <form method="POST" action="" class="register-form">
             {% csrf_token %}
 
             <div class="form-row">
                 <div class="form-group">
-                    <label for="firstname">Prénom</label>
-                    <input type="text" id="firstname" name="firstname" value="{{ form.firstname.value|default:'' }}"
-                        placeholder="Ex: Jean" required>
+                    <label>Prénom</label>
+                    <input type="text" name="firstname" value="{{ form.firstname.value|default:'' }}"
+                        placeholder="Prénom" required>
                     <i class="fas fa-user input-icon"></i>
+                    {{ form.firstname.errors }}
                 </div>
                 <div class="form-group">
-                    <label for="lastname">Nom</label>
-                    <input type="text" id="lastname" name="lastname" value="{{ form.lastname.value|default:'' }}"
-                        placeholder="Ex: Dupont" required>
+                    <label>Nom</label>
+                    <input type="text" name="lastname" value="{{ form.lastname.value|default:'' }}" placeholder="Nom"
+                        required>
                     <i class="fas fa-user input-icon"></i>
+                    {{ form.lastname.errors }}
                 </div>
             </div>
 
             <div class="form-group">
-                <label for="email">Email</label>
-                <input type="email" id="email" name="email" value="{{ form.email.value|default:'' }}"
-                    placeholder="votre@email.com" required>
+                <label>Email</label>
+                <input type="email" name="email" value="{{ form.email.value|default:'' }}" placeholder="votre@email.com"
+                    required>
                 <i class="fas fa-envelope input-icon"></i>
+                {{ form.email.errors }}
             </div>
 
             <div class="form-row">
                 <div class="form-group">
-                    <label for="password1">Mot de passe</label>
-                    <input type="password" id="password1" name="password1" placeholder="••••••••" required>
+                    <label>Mot de passe</label>
+                    <input type="password" name="password1" placeholder="••••••••" required>
                     <i class="fas fa-lock input-icon"></i>
+                    {{ form.password1.errors }}
                 </div>
                 <div class="form-group">
-                    <label for="password2">Confirmation</label>
-                    <input type="password" id="password2" name="password2" placeholder="••••••••" required>
+                    <label>Confirmation</label>
+                    <input type="password" name="password2" placeholder="••••••••" required>
                     <i class="fas fa-check-circle input-icon"></i>
+                    {{ form.password2.errors }}
                 </div>
             </div>
 
-            <button type="submit" class="btn-submit">
-                S'inscrire
-            </button>
+            <button type="submit" class="btn-submit">S'inscrire</button>
         </form>
 
-        <div class="divider">
-            <span>Ou s'inscrire avec</span>
-        </div>
+        <div class="divider"><span>Ou</span></div>
 
-        <form method="post" action="{% provider_login_url 'google' %}" id="google-login-form">
+        <form method="post" action="{% provider_login_url 'google' %}">
             {% csrf_token %}
             <button type="submit" class="btn-google">
-                <img src="{% static 'photos/Google-logo.png' %}" alt="Google">
+                <img src="{% static 'photos/Google-logo.png' %}" width="20">
                 Google
             </button>
         </form>
 
-        <div class="register-footer">
-            <p>Déjà un compte ? <a href="{% url 'shop:login' %}">Se connecter</a></p>
+        <div class="footer-link">
+            Déjà inscrit ? <a href="{% url 'shop:login' %}">Se connecter</a>
         </div>
     </div>
 </body>

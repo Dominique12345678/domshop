@@ -1,130 +1,166 @@
 {% extends "client/base.html" %}
+{% load static %}
 {% block content %}
 <div class="container py-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="fw-bold" style="color: var(--primary-color);">Nos Produits</h2>
-        <a href="{% url 'shop:view_cart' %}" class="btn text-white rounded-pill px-4" style="background-color: var(--accent-color);">
-            <i class="fas fa-shopping-cart me-2"></i> Voir le panier
-        </a>
-    </div>
+    <div class="row g-4">
+        <!-- Sidebar Filtres -->
+        <div class="col-lg-3">
+            <div class="card border-0 shadow-sm p-3 sticky-top" style="top: 100px; border-radius: 24px;">
+                <h5 class="fw-bold mb-4"><i class="fas fa-filter me-2 text-primary"></i>Filtres</h5>
+                
+                <form id="searchForm">
+                    <!-- Recherche locale -->
+                    <div class="mb-4">
+                        <label class="form-label small fw-bold text-muted">RECHERCHE</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-transparent border-end-0"><i class="fas fa-search text-muted"></i></span>
+                            <input type="text" id="searchInput" name="q" class="form-control border-start-0"
+                                   placeholder="Ex: iPhone..." value="{{ query }}" autocomplete="off">
+                        </div>
+                    </div>
 
-    <!-- Filtres et Recherche Dynamique -->
-    <div class="card border-0 shadow-sm mb-4" style="border-radius: 12px;">
-        <div class="card-body">
-            <form id="searchForm" class="row g-3">
-                <div class="col-md-6">
-                    <input type="text" id="searchInput" name="q" class="form-control rounded-pill" placeholder="Rechercher un produit..." value="{{ request.GET.q }}">
-                </div>
-                <div class="col-md-4">
-                    <select id="categorySelect" name="category" class="form-select rounded-pill">
-                        <option value="">Toutes les catégories</option>
-                        {% for cat in categories %}
-                            <option value="{{ cat.id }}" {% if request.GET.category == cat.id|stringformat:"s" %}selected{% endif %}>{{ cat.cat_name }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="col-md-2">
-                    <button type="submit" class="btn text-white rounded-pill w-100" style="background-color: var(--primary-color);">
-                        <i class="fas fa-search me-1"></i> Rechercher
-                    </button>
-                </div>
-            </form>
+                    <!-- Catégories -->
+                    <div class="mb-4">
+                        <label class="form-label small fw-bold text-muted">CATÉGORIES</label>
+                        <select name="category" id="categorySelect" class="form-select border-0 bg-light rounded-4">
+                            <option value="">Toutes</option>
+                            {% for cat in categories %}
+                                <option value="{{ cat.id }}" {% if request.GET.category == cat.id|stringformat:"s" %}selected{% endif %}>{{ cat.cat_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Prix -->
+                    <div class="mb-4">
+                        <label class="form-label small fw-bold text-muted">PRIX (FCFA)</label>
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <input type="number" name="min_price" class="form-control border-0 bg-light rounded-4"
+                                       placeholder="Min" value="{{ min_price }}">
+                            </div>
+                            <div class="col-6">
+                                <input type="number" name="max_price" class="form-control border-0 bg-light rounded-4"
+                                       placeholder="Max" value="{{ max_price }}">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tri -->
+                    <div class="mb-4">
+                        <label class="form-label small fw-bold text-muted">TRIER PAR</label>
+                        <select name="sort" class="form-select border-0 bg-light rounded-4">
+                            <option value="newest"     {% if sort_by == 'newest'     %}selected{% endif %}>Plus récents</option>
+                            <option value="price_asc"  {% if sort_by == 'price_asc'  %}selected{% endif %}>Prix croissant</option>
+                            <option value="price_desc" {% if sort_by == 'price_desc' %}selected{% endif %}>Prix décroissant</option>
+                            <option value="rating"     {% if sort_by == 'rating'     %}selected{% endif %}>Meilleures notes</option>
+                        </select>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100 rounded-pill py-2 fw-bold">Appliquer</button>
+                    <button type="reset" class="btn btn-link w-100 text-muted small mt-2" id="resetFilters">Réinitialiser</button>
+                </form>
+            </div>
         </div>
-    </div>
 
-    <!-- Conteneur pour afficher les résultats Ajax -->
-    <div class="row" id="productGrid">
-        {% include "client/products/product_grid.html" %}
+        <!-- Grille Produits -->
+        <div class="col-lg-9">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h3 class="fw-bold mb-0">Découvrez nos <span class="text-primary">Produits</span></h3>
+                <div class="text-muted small" id="resultCount">{{ products|length }} résultat(s)</div>
+            </div>
+            
+            <div class="row" id="productGrid">
+                {% include "client/products/product_grid.html" %}
+            </div>
+        </div>
     </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const searchForm = document.getElementById('searchForm');
-        const searchInput = document.getElementById('searchInput');
-        const categorySelect = document.getElementById('categorySelect');
-        const productGrid = document.getElementById('productGrid');
+document.addEventListener('DOMContentLoaded', function () {
+    const searchForm  = document.getElementById('searchForm');
+    const productGrid = document.getElementById('productGrid');
+    const resultCount = document.getElementById('resultCount');
+    let debounceTimer;
 
-        function fetchProducts() {
-            const formData = new FormData(searchForm);
-            const params = new URLSearchParams(formData).toString();
-            
-            fetch(`{% url 'shop:product_list_client' %}?` + params, {
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
+    /* ===== fetch & render products ===== */
+    function fetchProducts() {
+        const params = new URLSearchParams(new FormData(searchForm)).toString();
+        fetch(`{% url 'shop:product_list_client' %}?${params}`, {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(r => r.json())
+        .then(d => {
+            if (d.html !== undefined) {
+                productGrid.innerHTML = d.html;
+            }
+            if (d.count !== undefined && resultCount) {
+                resultCount.textContent = `${d.count} résultat(s)`;
+            }
+        });
+    }
+
+    /* Sidebar search: live while typing */
+    document.getElementById('searchInput').addEventListener('input', () => {
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(fetchProducts, 300);
+    });
+
+    searchForm.addEventListener('submit',  e => { e.preventDefault(); fetchProducts(); });
+    searchForm.addEventListener('change',  () => fetchProducts());
+    document.getElementById('resetFilters').addEventListener('click', () => {
+        searchForm.reset();
+        setTimeout(fetchProducts, 10);
+    });
+
+    /* ===== Cart AJAX ===== */
+    document.addEventListener('click', function (e) {
+        const cartBtn = e.target.closest('.add-to-cart-btn');
+        if (cartBtn && !cartBtn.disabled) {
+            e.preventDefault();
+
+            fetch(cartBtn.dataset.url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(r => r.json())
+            .then(d => {
+                showToast(d.message, d.status);
+
+                /* Update cart badge */
+                if (typeof d.cart_count !== 'undefined') {
+                    updateCartBadge(d.cart_count);
+                    /* Animate the basket icon */
+                    const badge = document.getElementById('cart-counter');
+                    const link  = badge ? badge.closest('.nav-link') : null;
+                    if (link) {
+                        link.classList.add('animate__animated', 'animate__headShake');
+                        setTimeout(() => link.classList.remove('animate__animated', 'animate__headShake'), 700);
+                    }
                 }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.html) {
-                    productGrid.innerHTML = data.html;
+
+                if (d.status === 'success') {
+                    cartBtn.disabled = true;
+                    cartBtn.classList.add('active');
+                    cartBtn.innerHTML = '<i class="fas fa-check me-2"></i>Déjà ajouté';
                 }
-            })
-            .catch(error => {
-                console.error("Erreur de recherche dynamique: ", error);
             });
         }
 
-        searchForm.addEventListener('submit', function(e) {
+        /* ===== Wishlist AJAX ===== */
+        const wishBtn = e.target.closest('.toggle-wishlist');
+        if (wishBtn) {
             e.preventDefault();
-            fetchProducts();
-        });
-
-        searchInput.addEventListener('keyup', function() {
-            fetchProducts();
-        });
-
-        categorySelect.addEventListener('change', function() {
-            fetchProducts();
-        });
-
-        // Event delegation for "Add to Cart" buttons
-        document.addEventListener('click', function(e) {
-            const btn = e.target.closest('.add-to-cart-btn');
-            if (btn) {
-                e.preventDefault();
-                const url = btn.getAttribute('data-url');
-                
-                // Fetch to add-to-cart endpoint with AJAX header
-                fetch(url, {
-                    method: 'GET',
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest'
-                    }
-                })
-                .then(response => response.json())
-                .then(data => {
-                    // Show Toast Notification
-                    const toastElement = document.getElementById('liveToast');
-                    const toastMessage = document.getElementById('toastMessage');
-                    
-                    toastMessage.textContent = data.message;
-                    
-                    // Set toast color based on status
-                    if (data.status === 'success') {
-                        toastElement.classList.replace('bg-info', 'bg-success');
-                        toastElement.classList.add('bg-success');
-                    } else {
-                        toastElement.classList.replace('bg-success', 'bg-info');
-                        toastElement.classList.add('bg-info');
-                    }
-                    
-                    const toast = new bootstrap.Toast(toastElement);
-                    toast.show();
-                    
-                    // Update button state visually without reloading
-                    btn.disabled = true;
-                    btn.className = "btn btn-secondary mt-auto rounded-pill w-100";
-                    btn.removeAttribute('onmouseover');
-                    btn.removeAttribute('onmouseout');
-                    btn.style = "";
-                    btn.innerHTML = '<i class="fas fa-check"></i> Déjà au panier';
-                })
-                .catch(error => console.error("Erreur ajout au panier: ", error));
-            }
-        });
+            wishBtn.classList.add('animate__animated', 'animate__heartBeat');
+            fetch(wishBtn.dataset.url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(r => r.json())
+            .then(d => {
+                wishBtn.classList.toggle('active');
+                wishBtn.querySelector('i').className = d.action === 'added' ? 'fas fa-heart' : 'far fa-heart';
+                showToast(d.message, 'success');
+                setTimeout(() => wishBtn.classList.remove('animate__animated', 'animate__heartBeat'), 600);
+            });
+        }
     });
+});
 </script>
 {% endblock %}

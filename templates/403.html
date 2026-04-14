@@ -1,0 +1,64 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Accès refusé - DomShop</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #14599e;
+            --secondary: #f76d34;
+        }
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Poppins', sans-serif;
+            background: #2c3e50;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: white;
+        }
+        .container {
+            max-width: 600px;
+            padding: 40px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 30px;
+            border: 2px solid var(--secondary);
+        }
+        .error-code {
+            font-size: 120px;
+            font-weight: 700;
+            margin: 0;
+            color: var(--secondary);
+        }
+        h1 { font-size: 28px; margin-top: 10px; }
+        p { color: #bdc3c7; margin-bottom: 30px; }
+        .icon { font-size: 80px; margin-bottom: 20px; color: #e74c3c; }
+        .btn {
+            display: inline-block;
+            padding: 15px 35px;
+            background-color: var(--secondary);
+            color: white;
+            text-decoration: none;
+            border-radius: 50px;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="icon"><i class="fas fa-user-lock"></i></div>
+        <div class="error-code">403</div>
+        <h1>Zone réservée</h1>
+        <p>Hop hop hop ! Vous n'avez pas les permissions nécessaires pour accéder à cette section. Veuillez vous connecter avec un compte autorisé.</p>
+        <a href="/" class="btn">Retour à l'accueil</a>
+    </div>
+</body>
+</html>

@@ -58,10 +58,12 @@ class User(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(max_length=45, unique=True, validators=[validate_email])
     password = models.CharField(max_length=128)
     role = models.ForeignKey(Role, on_delete=models.PROTECT)
-    is_active = models.BooleanField(default=True)
+    is_active = models.BooleanField(default=False) # Inactif par défaut pour confirmation email
     is_staff = models.BooleanField(default=False)
+    is_banned = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
 
     objects = UserManager()
 
@@ -86,6 +88,16 @@ class Category(models.Model):
     class Meta:
         db_table = 'categories'
 
+class UserOTP(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='otp')
+    code = models.CharField(max_length=6)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def is_valid(self):
+        # Valide pendant 10 minutes
+        return (timezone.now() - self.created_at).total_seconds() < 600
+
+
 
 class Product(models.Model):
     pro_name = models.CharField(max_length=45)
@@ -103,6 +115,52 @@ class Product(models.Model):
 
     class Meta:
         db_table = 'products'
+
+class ProductImage(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='images')
+    image = models.ImageField(upload_to='product_gallery/')
+    is_main = models.BooleanField(default=False)
+
+    class Meta:
+        db_table = 'product_images'
+
+class Review(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='reviews')
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    rating = models.PositiveIntegerField(default=5)  # 1 to 5
+    comment = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'reviews'
+
+class Wishlist(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='wishlist')
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+
+    class Meta:
+        db_table = 'wishlist'
+        unique_together = ('user', 'product')
+
+class Coupon(models.Model):
+    DISCOUNT_TYPES = (
+        ('percent', 'Pourcentage'),
+        ('amount', 'Montant fixe'),
+    )
+    code = models.CharField(max_length=20, unique=True)
+    discount_type = models.CharField(max_length=10, choices=DISCOUNT_TYPES, default='percent')
+    discount_percent = models.PositiveIntegerField(null=True, blank=True)
+    discount_amount = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    valid_from = models.DateTimeField()
+    valid_to = models.DateTimeField()
+    active = models.BooleanField(default=True)
+
+    def __str__(self):
+        return f"{self.code} ({self.get_discount_type_display()})"
+
+    class Meta:
+        db_table = 'coupons'
+
 
 
 class Sale(models.Model):
@@ -170,8 +228,18 @@ class CartItem(models.Model):
 
 
 class Order(models.Model):
+    STATUS_CHOICES = (
+        ('pending', 'En attente'),
+        ('prepared', 'En préparation'),
+        ('shipped', 'Expédié'),
+        ('delivered', 'Livré'),
+        ('cancelled', 'Annulé'),
+    )
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     total = models.DecimalField(max_digits=10, decimal_places=2)
+    discount_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    coupon_code = models.CharField(max_length=20, blank=True, null=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -179,6 +247,7 @@ class Order(models.Model):
 
     class Meta:
         db_table = 'orders'
+
 
 
 class OrderItem(models.Model):

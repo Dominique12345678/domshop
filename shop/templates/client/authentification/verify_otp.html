@@ -1,0 +1,102 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vérification Email - DomShop</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #14599e;
+            --bg: #f8f9fa;
+            --card: #ffffff;
+            --text: #212529;
+        }
+        [data-bs-theme="dark"] {
+            --bg: #0d1117;
+            --card: #161b22;
+            --text: #c9d1d9;
+        }
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            transition: 0.3s;
+        }
+        .container {
+            max-width: 400px;
+            width: 90%;
+            background: var(--card);
+            padding: 40px;
+            border-radius: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .logo { height: 60px; margin-bottom: 20px; }
+        h2 { font-weight: 700; margin-bottom: 10px; }
+        p { opacity: 0.7; font-size: 14px; margin-bottom: 30px; }
+        .otp-input {
+            width: 100%;
+            padding: 15px;
+            border-radius: 15px;
+            border: 2px solid #eee;
+            background: rgba(0,0,0,0.02);
+            font-size: 24px;
+            letter-spacing: 10px;
+            text-align: center;
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+        .btn-verify {
+            width: 100%;
+            padding: 15px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .btn-verify:hover { transform: translateY(-2px); opacity: 0.9; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <img src="{% static 'photos/logo.png' %}" class="logo" alt="DomShop">
+        <h2>Vérification</h2>
+        <p>Un code à 6 chiffres a été envoyé à <b>{{ user_obj.email }}</b>. Veuillez le saisir pour activer votre compte.</p>
+        
+        <form method="POST">
+            {% csrf_token %}
+            <input type="text" name="code" class="otp-input" placeholder="000000" maxlength="6" required autofocus>
+            {% if messages %}
+                {% for message in messages %}
+                    <div style="color: #e63946; margin-bottom: 15px; font-size: 14px;">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+            <button type="submit" class="btn-verify">VÉRIFIER LE COMPTE</button>
+        </form>
+        
+        <div style="margin-top: 20px; font-size: 14px;">
+            <p class="mb-2">Vous n'avez pas reçu le code ?</p>
+            <a href="{% url 'shop:resend_otp' user_obj.id %}" style="color: var(--primary); font-weight: 700; text-decoration: none;">Renvoyer le code</a>
+            <hr style="margin: 20px 0; opacity: 0.1;">
+            <a href="{% url 'shop:login' %}" style="color: var(--primary); text-decoration: none; opacity: 0.6;">Retour à la connexion</a>
+        </div>
+    </div>
+
+    <script>
+        if (localStorage.getItem('theme') === 'dark') {
+            document.body.setAttribute('data-bs-theme', 'dark');
+        }
+    </script>
+</body>
+</html>
