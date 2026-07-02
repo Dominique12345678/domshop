@@ -28,7 +28,11 @@ def is_admin(user):
 # Accueil client
 def home(request):
     featured_products = Product.objects.all().order_by('-id')[:3]
-    return render(request, 'client/home.html', {'featured_products': featured_products})
+    categories = Category.objects.all()
+    return render(request, 'client/home.html', {
+        'featured_products': featured_products,
+        'categories': categories
+    })
 
 
 # Tableau de bord admin

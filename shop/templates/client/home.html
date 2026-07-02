@@ -1,22 +1,25 @@
 {% extends "client/base.html" %}
 {% load static %}
 
-{% block title %}Accueil - DomShop{% endblock %}
+{% block title %}Accueil - DomShop | Technologie & Mode{% endblock %}
 
 {% block extra_css %}
 <style>
+    /* Global Section Settings */
+    section {
+        padding: 4.5rem 0;
+    }
+    
     /* Fullscreen Hero Section */
     .hero-container {
         position: relative;
-        height: 60vh;
+        height: 75vh;
         width: 100%;
         overflow: hidden;
         display: flex;
-        flex-direction: column;
-        justify-content: center;
         align-items: center;
-        margin-top: 0; /* Remove negative margin which was hiding top of video */
-        padding-top: 80px; /* Offset to center everything visually below the 65px navbar */
+        margin-top: 0;
+        padding-top: 80px;
     }
     
     .hero-bg-img {
@@ -25,8 +28,14 @@
         left: 0;
         width: 100%;
         height: 100%;
-        object-fit: cover; /* Keeps aspect ratio while filling container */
+        object-fit: cover;
         z-index: -1;
+        transform: scale(1.02);
+        transition: transform 10s ease;
+    }
+    
+    .hero-container:hover .hero-bg-img {
+        transform: scale(1.08);
     }
     
     .hero-overlay {
@@ -35,45 +44,451 @@
         left: 0;
         width: 100%;
         height: 100%;
-        background: rgba(0, 0, 0, 0.5); /* Dim the video for better readability */
+        background: linear-gradient(135deg, rgba(20, 89, 158, 0.75) 0%, rgba(247, 109, 52, 0.5) 100%);
         z-index: 0;
     }
-
-    /* Glassmorphism content card */
-    .hero-content {
+    
+    /* Modern Glassmorphic Hero Card */
+    .hero-content-box {
         position: relative;
         z-index: 1;
         color: white;
-        text-align: center;
-        padding: 2rem; /* Reduced from 3rem */
+        padding: 3rem;
         background: rgba(255, 255, 255, 0.1);
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        border-radius: 20px;
-        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-        max-width: 800px;
-        width: 90%;
-        animation: fadeInDown 1s ease-out;
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        border-radius: 30px;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        max-width: 680px;
+        animation: fadeInUp 1s ease-out;
     }
-
-    .hero-content h1 {
-        font-weight: 800;
+    
+    .hero-badge {
+        background: rgba(247, 109, 52, 0.9);
+        color: white;
+        font-weight: 700;
         text-transform: uppercase;
+        font-size: 0.8rem;
         letter-spacing: 2px;
-        margin-bottom: 1rem;
-        text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        padding: 0.5rem 1.2rem;
+        border-radius: 50px;
+        display: inline-block;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 4px 15px rgba(247, 109, 52, 0.4);
     }
 
-    .hero-content p {
-        font-size: 1.15rem;
-        margin-bottom: 1.5rem; /* Reduced from 2rem to bring the button higher */
-        text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
+    .hero-content-box h1 {
+        font-weight: 800;
+        font-size: 3.5rem;
+        line-height: 1.2;
+        margin-bottom: 1.2rem;
+        text-shadow: 0 2px 10px rgba(0,0,0,0.3);
     }
 
-    /* Override base.html main padding which causes a huge gap before products */
+    .hero-content-box p {
+        font-size: 1.2rem;
+        margin-bottom: 2rem;
+        opacity: 0.95;
+        text-shadow: 0 1px 5px rgba(0,0,0,0.2);
+    }
+    
+    .hero-buttons .btn {
+        padding: 0.85rem 2rem;
+        border-radius: 50px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+    
+    .hero-buttons .btn-primary {
+        background: var(--accent-color);
+        border: none;
+        box-shadow: 0 8px 25px rgba(247, 109, 52, 0.4);
+    }
+    
+    .hero-buttons .btn-primary:hover {
+        background: #e05e26;
+        transform: translateY(-3px);
+        box-shadow: 0 12px 30px rgba(247, 109, 52, 0.5);
+    }
+    
+    .hero-buttons .btn-outline-light:hover {
+        background: white;
+        color: var(--primary-color) !important;
+        transform: translateY(-3px);
+    }
+
+    /* Override base.html main padding to achieve continuous flow */
     main.container {
-        padding-top: 2rem !important;
+        padding-top: 0 !important;
+        max-width: 100% !important;
+        width: 100% !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+    }
+    
+    .content-wrapper {
+        max-width: 1320px;
+        margin: 0 auto;
+        padding: 0 1.5rem;
+    }
+
+    /* ---- KEY FEATURES SECTION ---- */
+    .features-section {
+        background: var(--card-bg);
+        margin-top: -3rem;
+        position: relative;
+        z-index: 10;
+        border-radius: 24px;
+        box-shadow: 0 15px 35px rgba(0,0,0,0.06);
+        padding: 2.5rem;
+        border: 1px solid rgba(0, 0, 0, 0.05);
+    }
+    
+    [data-bs-theme="dark"] .features-section {
+        border-color: rgba(255, 255, 255, 0.05);
+        box-shadow: 0 15px 35px rgba(0,0,0,0.35);
+    }
+    
+    .feature-card {
+        text-align: center;
+        padding: 1.5rem;
+        transition: transform 0.3s ease;
+    }
+    
+    .feature-card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .feature-icon-wrapper {
+        width: 70px;
+        height: 70px;
+        border-radius: 50%;
+        background: rgba(20, 89, 158, 0.08);
+        color: var(--primary-color);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.8rem;
+        margin: 0 auto 1.2rem;
+        transition: all 0.3s ease;
+    }
+    
+    .feature-card:hover .feature-icon-wrapper {
+        background: var(--primary-color);
+        color: white;
+        transform: rotate(360deg);
+    }
+    
+    .feature-card h5 {
+        font-weight: 700;
+        font-size: 1.1rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .feature-card p {
+        font-size: 0.9rem;
+        opacity: 0.75;
+        margin-bottom: 0;
+    }
+
+    /* ---- CATEGORIES SECTION ---- */
+    .section-title {
+        position: relative;
+        font-weight: 800;
+        font-size: 2.2rem;
+        margin-bottom: 3rem;
+        color: var(--text-color);
+    }
+    
+    .section-title::after {
+        content: '';
+        position: absolute;
+        bottom: -10px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 60px;
+        height: 4px;
+        background: var(--accent-color);
+        border-radius: 2px;
+    }
+    
+    .category-card {
+        border-radius: 20px;
+        overflow: hidden;
+        position: relative;
+        height: 180px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        text-decoration: none;
+        box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+        border: none;
+        transition: all 0.4s ease;
+    }
+    
+    .category-card:hover {
+        transform: scale(1.03) translateY(-5px);
+        box-shadow: 0 15px 30px rgba(0,0,0,0.15);
+    }
+    
+    .category-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(180deg, rgba(0,0,0,0.1) 0%, rgba(20, 89, 158, 0.85) 100%);
+        z-index: 1;
+        transition: opacity 0.3s ease;
+    }
+    
+    .category-card:hover .category-overlay {
+        background: linear-gradient(180deg, rgba(0,0,0,0.2) 0%, rgba(247, 109, 52, 0.9) 100%);
+    }
+    
+    .category-content {
+        position: relative;
+        z-index: 2;
+        text-align: center;
+        padding: 1.5rem;
+    }
+    
+    .category-icon {
+        font-size: 2.2rem;
+        margin-bottom: 0.8rem;
+        display: block;
+        transition: transform 0.3s ease;
+    }
+    
+    .category-card:hover .category-icon {
+        transform: scale(1.2);
+    }
+    
+    .category-title {
+        font-weight: 700;
+        font-size: 1.25rem;
+        margin-bottom: 0;
+        letter-spacing: 1px;
+    }
+
+    /* ---- PRODUCTS SECTION ---- */
+    .product-grid-card {
+        border-radius: 24px;
+        overflow: hidden;
+        background: var(--card-bg);
+        border: 1px solid rgba(0,0,0,0.05);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.03);
+        transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    [data-bs-theme="dark"] .product-grid-card {
+        border-color: rgba(255, 255, 255, 0.05);
+    }
+    
+    .product-grid-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+    }
+    
+    .product-img-wrap {
+        position: relative;
+        padding-top: 100%; /* 1:1 Aspect Ratio */
+        background: #f8f9fa;
+        overflow: hidden;
+    }
+    
+    [data-bs-theme="dark"] .product-img-wrap {
+        background: #1f242c;
+    }
+    
+    .product-img-wrap img {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
+    }
+    
+    .product-grid-card:hover .product-img-wrap img {
+        transform: scale(1.08);
+    }
+    
+    .product-badge {
+        position: absolute;
+        top: 1rem;
+        left: 1rem;
+        z-index: 10;
+        background: var(--primary-color);
+        color: white;
+        font-weight: 700;
+        font-size: 0.75rem;
+        padding: 0.4rem 0.8rem;
+        border-radius: 50px;
+        text-transform: uppercase;
+        box-shadow: 0 4px 10px rgba(20, 89, 158, 0.2);
+    }
+    
+    .product-body {
+        padding: 1.5rem;
+        display: flex;
+        flex-direction: column;
+        flex-grow: 1;
+    }
+    
+    .product-title {
+        font-size: 1.15rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+        transition: color 0.2s;
+    }
+    
+    .product-title a {
+        color: inherit;
+        text-decoration: none;
+    }
+    
+    .product-title a:hover {
+        color: var(--primary-color);
+    }
+    
+    .product-rating {
+        color: #ffc107;
+        font-size: 0.85rem;
+        margin-bottom: 0.8rem;
+    }
+    
+    .product-desc {
+        font-size: 0.9rem;
+        opacity: 0.7;
+        margin-bottom: 1.2rem;
+        line-height: 1.5;
+        flex-grow: 1;
+    }
+    
+    .product-footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-top: auto;
+        padding-top: 1rem;
+        border-top: 1px solid rgba(0,0,0,0.05);
+    }
+    
+    [data-bs-theme="dark"] .product-footer {
+        border-top-color: rgba(255, 255, 255, 0.05);
+    }
+    
+    .product-price {
+        font-size: 1.3rem;
+        font-weight: 800;
+        color: var(--accent-color);
+    }
+    
+    .product-btn {
+        background: var(--primary-color);
+        color: white;
+        width: 42px;
+        height: 42px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: none;
+        transition: all 0.3s ease;
+        text-decoration: none;
+    }
+    
+    .product-btn:hover {
+        background: var(--accent-color);
+        color: white;
+        transform: rotate(360deg);
+        box-shadow: 0 4px 10px rgba(247, 109, 52, 0.3);
+    }
+    
+    /* ---- NEWSLETTER SECTION ---- */
+    .newsletter-banner {
+        background: linear-gradient(135deg, #104275 0%, #14599e 100%);
+        border-radius: 30px;
+        padding: 4rem 3rem;
+        color: white;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+    }
+    
+    .newsletter-banner::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -30%;
+        width: 500px;
+        height: 500px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.03);
+        pointer-events: none;
+    }
+    
+    .newsletter-banner h2 {
+        font-weight: 800;
+        font-size: 2.2rem;
+        margin-bottom: 0.8rem;
+    }
+    
+    .newsletter-banner p {
+        opacity: 0.85;
+        font-size: 1.1rem;
+        margin-bottom: 2rem;
+    }
+    
+    .newsletter-input-group {
+        max-width: 550px;
+        margin: 0 auto;
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        padding: 6px;
+        border-radius: 50px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        display: flex;
+        align-items: center;
+    }
+    
+    .newsletter-input-group input {
+        background: transparent;
+        border: none;
+        color: white;
+        padding: 0.5rem 1.5rem;
+        width: 100%;
+    }
+    
+    .newsletter-input-group input:focus {
+        outline: none;
+    }
+    
+    .newsletter-input-group input::placeholder {
+        color: rgba(255, 255, 255, 0.6);
+    }
+    
+    .newsletter-input-group button {
+        background: var(--accent-color);
+        color: white;
+        border: none;
+        padding: 0.8rem 2rem;
+        border-radius: 50px;
+        font-weight: 600;
+        box-shadow: 0 4px 15px rgba(247, 109, 52, 0.3);
+        transition: all 0.3s ease;
+    }
+    
+    .newsletter-input-group button:hover {
+        background: #e05e26;
+        transform: scale(1.03);
     }
 </style>
 {% endblock %}
@@ -82,64 +497,185 @@
 <div class="hero-container">
     <img src="{% static 'photos/back.jfif' %}" alt="Background" class="hero-bg-img">
     <div class="hero-overlay"></div>
-    <div class="hero-content">
-        <h1 class="display-4">Bienvenue sur DomShop</h1>
-        <p class="lead">Découvrez nos produits exceptionnels et profitez d'une expérience d'achat unique en ligne.</p>
-        
-        {% if user.is_authenticated %}
-            <div class="alert alert-success d-inline-block px-4 mb-3" style="background: rgba(25, 135, 84, 0.7); border: none; color: white;">
-                Vous êtes connecté en tant que <strong>{{ user.email }}</strong>
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-7 text-start">
+                <div class="hero-content-box animate__animated animate__fadeInLeft">
+                    <span class="hero-badge">Exclusivité DomShop</span>
+                    <h1 class="display-3">La technologie à votre portée</h1>
+                    <p class="lead">Découvrez nos produits d'exception. Une expérience d'achat unique en ligne avec un service irréprochable et des tarifs imbattables.</p>
+                    
+                    <div class="hero-buttons">
+                        {% if user.is_authenticated %}
+                            <div class="alert alert-success d-inline-block px-4 py-2 mb-4 border-0 text-white shadow-sm" style="background: rgba(25, 135, 84, 0.75); backdrop-filter: blur(5px); border-radius: 12px;">
+                                <i class="fas fa-check-circle me-2"></i> Connecté en tant que <strong>{{ user.email }}</strong>
+                            </div>
+                            <br>
+                            <a href="{% url 'shop:product_list_client' %}" class="btn btn-primary btn-lg px-5 rounded-pill shadow me-3">
+                                <i class="fas fa-shopping-bag me-2"></i> Explorer le Catalogue
+                            </a>
+                        {% else %}
+                            <a href="{% url 'shop:login' %}" class="btn btn-primary btn-lg px-5 rounded-pill shadow me-3">
+                                <i class="fas fa-sign-in-alt me-2"></i> Se Connecter
+                            </a>
+                            <a href="{% url 'shop:register' %}" class="btn btn-outline-light btn-lg px-5 rounded-pill shadow">
+                                <i class="fas fa-user-plus me-2"></i> S'inscrire
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
             </div>
-            <br>
-            <a href="{% url 'shop:product_list_client' %}" class="btn btn-primary btn-lg px-5 rounded-pill shadow">
-                Voir nos produits
-            </a>
-        {% else %}
-            <div class="d-grid gap-3 d-sm-flex justify-content-sm-center">
-                <a href="{% url 'shop:login' %}" class="btn btn-primary btn-lg px-5 py-3 rounded-pill gap-3 shadow">
-                    Se connecter
-                </a>
-                <a href="{% url 'shop:register' %}" class="btn btn-outline-light btn-lg px-5 py-3 rounded-pill shadow">
-                    S'inscrire
-                </a>
-            </div>
-        {% endif %}
+        </div>
     </div>
 </div>
 {% endblock %}
 
 {% block content %}
-<!-- Section produits vedettes -->
-<div class="row mt-2">
-    <div class="col-12">
-        <h2 class="text-center mb-4 fw-bold" style="color: var(--primary-color);">Nos produits phares</h2>
-        <div class="row justify-content-center">
+<div class="content-wrapper">
+    <!-- Key Features row -->
+    <div class="features-section mb-5 animate__animated animate__fadeInUp">
+        <div class="row g-4">
+            <div class="col-md-3 col-sm-6">
+                <div class="feature-card">
+                    <div class="feature-icon-wrapper">
+                        <i class="fas fa-shipping-fast"></i>
+                    </div>
+                    <h5>Livraison Rapide</h5>
+                    <p>Expédition sous 24/48h partout où vous êtes.</p>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6">
+                <div class="feature-card">
+                    <div class="feature-icon-wrapper">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <h5>Paiement Sécurisé</h5>
+                    <p>Transactions fiables et données protégées.</p>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6">
+                <div class="feature-card">
+                    <div class="feature-icon-wrapper">
+                        <i class="fas fa-headset"></i>
+                    </div>
+                    <h5>Support Réactif</h5>
+                    <p>Une équipe à votre écoute 24h/24 et 7j/7.</p>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6">
+                <div class="feature-card">
+                    <div class="feature-icon-wrapper">
+                        <i class="fas fa-award"></i>
+                    </div>
+                    <h5>Garantie Qualité</h5>
+                    <p>Des produits certifiés authentiques.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Categories Section -->
+    {% if categories %}
+    <section class="mb-5">
+        <h2 class="text-center section-title">Nos Catégories</h2>
+        <div class="row g-4 justify-content-center">
+            {% for cat in categories %}
+            <div class="col-lg-3 col-md-4 col-sm-6">
+                <a href="{% url 'shop:product_list_client' %}?category={{ cat.id }}" class="category-card" style="background: linear-gradient(135deg, var(--primary-color) 0%, rgba(20, 89, 158, 0.7) 100%);">
+                    <div class="category-overlay"></div>
+                    <div class="category-content">
+                        <span class="category-icon">
+                            {% if "phone" in cat.cat_name|lower or "téléphone" in cat.cat_name|lower or "mobile" in cat.cat_name|lower %}
+                                <i class="fas fa-mobile-alt"></i>
+                            {% elif "ordinateur" in cat.cat_name|lower or "pc" in cat.cat_name|lower or "laptop" in cat.cat_name|lower or "tech" in cat.cat_name|lower %}
+                                <i class="fas fa-laptop"></i>
+                            {% elif "mode" in cat.cat_name|lower or "vêtement" in cat.cat_name|lower or "habit" in cat.cat_name|lower or "chaussure" in cat.cat_name|lower %}
+                                <i class="fas fa-tshirt"></i>
+                            {% elif "accessoire" in cat.cat_name|lower or "écouteur" in cat.cat_name|lower or "montre" in cat.cat_name|lower %}
+                                <i class="fas fa-headphones"></i>
+                            {% elif "maison" in cat.cat_name|lower or "déco" in cat.cat_name|lower or "home" in cat.cat_name|lower %}
+                                <i class="fas fa-home"></i>
+                            {% else %}
+                                <i class="fas fa-tags"></i>
+                            {% endif %}
+                        </span>
+                        <h4 class="category-title">{{ cat.cat_name }}</h4>
+                    </div>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- Featured Products Section -->
+    <section class="mb-5">
+        <h2 class="text-center section-title">Nos produits phares</h2>
+        <div class="row g-4 justify-content-center">
             {% for product in featured_products %}
-            <div class="col-md-4 col-sm-6 mb-4">
-                <div class="card h-100 shadow-sm border-0" style="background-color: #fff;">
-                    <!-- Si vous avez des images produit, vous pouvez les ajouter ici -->
-                    {% if product.photo %}
-                    <img src="{{ product.photo.url }}" class="card-img-top" style="height: 200px; object-fit: cover;" alt="{{ product.pro_name }}">
-                    {% endif %}
-                    <div class="card-body d-flex flex-column text-center">
-                        <h5 class="card-title fw-bold" style="color: var(--primary-color);">{{ product.pro_name }}</h5>
-                        <p class="card-text text-muted flex-grow-1">{{ product.pro_desc|truncatechars:100 }}</p>
-                        <h4 class="mb-3" style="color: var(--accent-color);">{{ product.pro_price }} FCFA</h4>
-                        <a href="{% url 'shop:product_list_client' %}?q={{ product.pro_name }}" class="btn text-white mt-auto rounded-pill" style="background-color: var(--accent-color);">Voir ce produit</a>
+            <div class="col-lg-4 col-md-6 col-sm-12">
+                <div class="product-grid-card">
+                    <div class="product-img-wrap">
+                        <span class="product-badge">Vedette</span>
+                        {% if product.photo %}
+                        <img src="{{ product.photo.url }}" alt="{{ product.pro_name }}">
+                        {% else %}
+                        <div class="d-flex align-items-center justify-content-center h-100 w-100 opacity-25" style="background: #e9ecef;">
+                            <i class="fas fa-box fa-4x"></i>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="product-body">
+                        <h3 class="product-title">
+                            <a href="{% url 'shop:product_list_client' %}?q={{ product.pro_name }}">{{ product.pro_name }}</a>
+                        </h3>
+                        <div class="product-rating">
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <span class="text-muted small ms-1">(5.0)</span>
+                        </div>
+                        <p class="product-desc text-muted">{{ product.pro_desc|truncatechars:110 }}</p>
+                        
+                        <div class="product-footer">
+                            <span class="product-price">{{ product.pro_price }} FCFA</span>
+                            <a href="{% url 'shop:product_list_client' %}?q={{ product.pro_name }}" class="product-btn" title="Voir ce produit">
+                                <i class="fas fa-shopping-cart"></i>
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>
             {% empty %}
-            <div class="col-12">
-                <p class="text-center text-muted">Aucun produit phare disponible pour le moment.</p>
+            <div class="col-12 text-center py-5">
+                <div class="opacity-50 mb-3"><i class="fas fa-box-open fa-3x"></i></div>
+                <p class="text-muted">Aucun produit phare disponible pour le moment.</p>
+                <a href="{% url 'shop:product_list_client' %}" class="btn btn-outline-primary rounded-pill px-4">Parcourir notre catalogue</a>
             </div>
             {% endfor %}
-            {% if not featured_products %}
-            <div class="col-12 mt-3 text-center">
-                 <a href="{% url 'shop:product_list_client' %}" class="btn btn-primary btn-lg rounded-pill shadow">Parcourir notre catalogue</a>
-            </div>
-            {% endif %}
         </div>
-    </div>
+        
+        {% if featured_products %}
+        <div class="text-center mt-5">
+            <a href="{% url 'shop:product_list_client' %}" class="btn btn-accent text-white btn-lg rounded-pill px-5 shadow">
+                Voir tous les produits <i class="fas fa-arrow-right ms-2"></i>
+            </a>
+        </div>
+        {% endif %}
+    </section>
+
+    <!-- Newsletter Section -->
+    <section class="mb-5">
+        <div class="newsletter-banner text-center">
+            <h2>Rejoignez le Club DomShop</h2>
+            <p>Abonnez-vous à notre newsletter pour recevoir en exclusivité nos nouvelles offres et réductions exceptionnelles.</p>
+            <div class="newsletter-input-group mt-4">
+                <input type="email" placeholder="Votre adresse email..." aria-label="Email Address">
+                <button type="submit">S'abonner</button>
+            </div>
+        </div>
+    </section>
 </div>
 {% endblock %}
