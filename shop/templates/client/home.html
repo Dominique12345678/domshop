@@ -6,7 +6,7 @@
 {% block extra_css %}
 <style>
     /* Fullscreen Hero Section */
-    .hero-video-container {
+    .hero-container {
         position: relative;
         height: 60vh;
         width: 100%;
@@ -19,7 +19,7 @@
         padding-top: 80px; /* Offset to center everything visually below the 65px navbar */
     }
     
-    .hero-video-container video {
+    .hero-bg-img {
         position: absolute;
         top: 0;
         left: 0;
@@ -79,11 +79,8 @@
 {% endblock %}
 
 {% block hero %}
-<div class="hero-video-container">
-    <video autoplay loop muted playsinline>
-        <source src="{% static 'videos/videobackground.mp4' %}" type="video/mp4">
-        Votre navigateur ne supporte pas la balise vidéo.
-    </video>
+<div class="hero-container">
+    <img src="{% static 'photos/back.jfif' %}" alt="Background" class="hero-bg-img">
     <div class="hero-overlay"></div>
     <div class="hero-content">
         <h1 class="display-4">Bienvenue sur DomShop</h1>
