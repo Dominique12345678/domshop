@@ -27,3 +27,7 @@ Thumbs.db
 
 # Project specific
 requirements.txt.bak
+
+# Agent directories
+.gemini/
+

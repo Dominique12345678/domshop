@@ -132,7 +132,7 @@ SOCIALACCOUNT_PROVIDERS = {
         'AUTH_PARAMS': {'access_type': 'online'},
         'APP': {
             'client_id': '***REMOVED***',
-            'secret': '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', 
+            'secret': os.environ.get('GOOGLE_CLIENT_SECRET', ''), 
             'key': ''
         }
     }
@@ -145,6 +145,11 @@ EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = '***REMOVED***'  # À compléter
-EMAIL_HOST_PASSWORD = 'pcyu chiu airp dlnt'  # À compléter 
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')  # À compléter 
 DEFAULT_FROM_EMAIL = 'DomShop <***REMOVED***>'
 
+# Import local settings if they exist (for secrets and local configurations)
+try:
+    from .local_settings import *
+except ImportError:
+    pass
