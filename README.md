@@ -1,65 +1,82 @@
-# DomShop - Plateforme E-commerce Moderne 🛍️
+# DomShop
 
-DomShop est une application web e-commerce complète, développée avec Django, offrant une expérience utilisateur fluide et une interface d'administration puissante de type SaaS.
+DomShop est une application e-commerce développée avec Django. Elle propose une boutique en ligne simple, une authentification utilisateur et une intégration OAuth Google.
 
-## ✨ Fonctionnalités Clés
+## Fonctionnalités principales
 
-### 👤 Espace Client
-- **Accueil Dynamique** : Section HERO avec vidéo en arrière-plan et produits phares.
-- **Catalogue de Produits** : Affichage dynamique avec filtrage par catégorie et recherche instantanée.
-- **Panier intelligent** : Ajout et mise à jour des quantités via AJAX (sans rechargement de page) avec notifications Toast.
-- **Authentification Hybride** : Connexion classique ou via **Google OAuth 2.0**.
-- **Dashboard Client** : Historique des commandes, statistiques de dépenses et téléchargement de **factures en PDF**.
+- catalogue de produits et pages de détail
+- panier utilisateur
+- authentification locale et via Google OAuth
+- interface d'administration Django
+- gestion des commandes, coupons et produits
 
-### 🛠️ Administration (Dashboard SaaS)
-- **Analytics Dashboard** : Visualisation des ventes via des graphiques (Chart.js) et KPIs en temps réel.
-- **Gestion des Produits & Catégories** : Interfaces modernes pour créer, modifier et supprimer des articles.
-- **Gestion des Stocks** : Système d'inventaire avec alertes visuelles pour les stocks faibles ou en rupture.
-- **Gestion des Factures** : Consultation et génération de factures pour tous les utilisateurs.
+## Technologies utilisées
 
-## 🚀 Technologies Utilisées
+- Python
+- Django
+- django-allauth
+- SQLite par défaut
+- Bootstrap et templates HTML/CSS/JS
 
-- **Backend** : Python / Django 5.x
-- **Frontend** : HTML5, CSS3 (Vanilla), JavaScript (AJAX/Fetch API)
-- **UI Framework** : Bootstrap 5 + FontAwesome 6
-- **Bibliothèques Clés** :
-  - `django-allauth` (Authentification sociale)
-  - `Chart.js` (Graphiques dynamiques)
-  - `xhtml2pdf` (Génération de PDF)
-  - `SweetAlert2` (Pop-ups interactifs)
-  - `Animate.css` (Animations fluides)
+## Installation
 
-## 📦 Installation
-
-1. **Cloner le dépôt** :
+1. Cloner le dépôt :
    ```bash
-   git clone https://github.com/votre-utilisateur/domshop.git
-   cd domshop/shop_project
+   git clone https://github.com/Dominique12345678/domshop.git
+   cd shop_project
    ```
 
-2. **Créer un environnement virtuel** :
+2. Créer et activer un environnement virtuel :
    ```bash
    python -m venv .venv
-   .\.venv\Scripts\activate  # Windows
+   .\.venv\Scripts\activate
    ```
 
-3. **Installer les dépendances** :
+3. Installer les dépendances :
    ```bash
-   pip install django django-allauth pyjwt cryptography xhtml2pdf reportlab
+   pip install -r requirements.txt
    ```
 
-4. **Appliquer les migrations** :
+4. Configurer les variables d'environnement :
+   - copier le fichier .env.example vers .env
+   - remplir les valeurs nécessaires
+
+5. Appliquer les migrations :
    ```bash
    python manage.py migrate
    ```
 
-5. **Lancer le serveur** :
+6. Lancer le serveur :
    ```bash
    python manage.py runserver
    ```
 
-## 🔐 Configuration Google OAuth
-Pour activer la connexion Google, créez un projet sur la [Google Cloud Console](https://console.cloud.google.com/) et remplacez les clés `client_id` et `secret` dans le fichier `settings.py`.
+## Configuration des variables d'environnement
 
----
-*Développé avec ❤️ pour DomShop.*
+Le projet charge les valeurs sensibles depuis un fichier .env local. Créez un fichier .env à la racine du projet avec le contenu suivant :
+
+```env
+SECRET_KEY=replace-with-a-long-random-secret-key
+DEBUG=True
+ALLOWED_HOSTS=127.0.0.1,localhost
+GOOGLE_CLIENT_ID=your-google-client-id.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=your-google-client-secret
+EMAIL_HOST=smtp.gmail.com
+EMAIL_PORT=587
+EMAIL_USE_TLS=True
+EMAIL_HOST_USER=your-email@example.com
+EMAIL_HOST_PASSWORD=your-email-app-password
+DEFAULT_FROM_EMAIL=DomShop <your-email@example.com>
+```
+
+Le fichier .env doit rester local et ne jamais être commit.
+
+## Configuration Google OAuth
+
+Pour activer la connexion Google, créez un projet sur Google Cloud Console et renseignez les valeurs Google dans le fichier .env.
+
+## Notes importantes
+
+- le fichier .env est ignoré par Git
+- les secrets ne doivent jamais être ajoutés au dépôt
+- en production, utilisez une vraie clé secrète et des valeurs d'environnement sécurisées
